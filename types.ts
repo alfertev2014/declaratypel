@@ -1,32 +1,38 @@
 
-// Meta objects of types
+// Type expressions
 
 export enum DeclBuiltinType {
-  STRING,
-  NUMBER,
-  BOOLEAN,
-  NULL
+  STRING = 'string',
+  NUMBER = 'number',
+  BOOLEAN = 'boolean',
+  NULL = 'null',
+  TOP = 'top',
+  BOTTOM = 'bottom'
 }
 
 export enum DeclTypeCtor {
-  STRUCT,
-  ARRAY,
-  NAMED
+  STRUCT = 'struct',
+  ARRAY = 'array',
+  TAGGED = 'tagged',
+  UNION = 'union',
+  INTERSECTION = 'intersection',
+  GENERIC = 'generic',
+  NAMEREF = 'nameref'
 }
 
 export interface DeclCompoundType {
   tctor: DeclTypeCtor;
 }
 
-export type DeclKeyValueType = {
-  key: string;
+export type DeclVarDefinition = {
+  name: string;
   description?: string;
   type: DeclType;
 }
 
 export type DeclStructType = {
   tctor: DeclTypeCtor.STRUCT;
-  props: DeclKeyValueType[];
+  props: DeclVarDefinition[];
 }
 
 export type DeclArrayType = {
@@ -34,11 +40,38 @@ export type DeclArrayType = {
   items: DeclType;
 }
 
-export type DeclNamedType = {
-  tctor: DeclTypeCtor.NAMED;
-  name: string;
-  description?: string;
+export type DeclTaggedType = {
+  tctor: DeclTypeCtor.TAGGED;
+  tag: string;
   body: DeclType;
+}
+
+export type DeclUnionType = {
+  tctor: DeclTypeCtor.UNION;
+  args: DeclType[];
+}
+
+export type DeclIntersectionType = {
+  tctor: DeclTypeCtor.INTERSECTION;
+  args: DeclType[];
+}
+
+export type DeclTypeVarDefinition = {
+  name: string;
+  upperBound?: DeclType;
+  lowerBound?: DeclType;
+}
+
+export type DeclGenericType = {
+  tctor: DeclTypeCtor.GENERIC;
+  targs: DeclTypeVarDefinition[];
+  body: DeclType;
+}
+
+export type DeclNameRefType = {
+  tctor: DeclTypeCtor.NAMEREF;
+  name: string;
+  args?: DeclType[];
 }
 
 export type DeclType = DeclBuiltinType | DeclCompoundType;
@@ -61,43 +94,102 @@ export interface DeclASTNode {
   tag: string;
 }
 
-export interface DeclNamedExpression {
-  tag: 'named';
+export type DeclTaggedExpression = {
+  tag: 'tagged';
   name: string;
-  body: DeclLiteral;
+  body: DeclExpression;
 }
 
 export type DeclLiteral = {
   tag: 'literal';
   value: DeclPrimitiveValue | Array<DeclExpression> | Record<string, DeclExpression>;
+  type?: DeclType;
 }
 
-export type DeclExpression = DeclLiteral | DeclNamedExpression;
+export type DeclLambdaExpression = {
+  tag: 'lambda';
+  args: DeclVarDefinition[];
+  body: DeclExpression;
+}
+
+export type DeclDefinition = {
+  name: string;
+  description?: string;
+  value: DeclExpression;
+  type?: DeclType;
+}
+
+export type DeclTypeDefinition = {
+  name: string;
+  description?: string;
+  value: DeclType;
+}
+
+export type DeclScope = {
+  tag: 'scope';
+  let: DeclDefinition[];
+  in: DeclExpression;
+}
+
+export type DeclTypeDef = {
+  tag: 'typedef';
+  typedef: DeclTypeDefinition[];
+  in: DeclExpression;
+}
+
+export type DeclNameReference = {
+  tag: 'ref';
+  name: string;
+  args?: DeclExpression;
+}
+
+export type DeclTypeAnnotation = {
+  tag: 'oftype';
+  body: DeclExpression;
+  type: DeclType;
+}
+
+export type DeclSwitch = {
+  tag: 'switch';
+  switch: DeclExpression;
+  cases: [DeclExpression, DeclExpression][];
+}
+
+export type DeclExpression = DeclLiteral | DeclTaggedExpression | DeclLambdaExpression | DeclScope | DeclTypeAnnotation;
 
 
 // UI
 
-type DeclUINativeElement = {
-  ctor: 'NativeElement';
+export type DeclUINativeElement = {
+  tag: 'UINativeElement';
+  name: string;
   attrs: Record<string, DeclPrimitiveValue>;
   children: DeclUIElement[];
 }
 
-type DeclUIComponentPropValue = DeclPrimitiveValue | DeclUIComponentElement;
+export type DeclUIComponentPropValue = DeclPrimitiveValue | DeclUIComponentElement;
 
-type DeclUIComponentElement = {
-  ctor: 'component';
+export type DeclUIComponentElement = {
+  tag: 'UIComponentElement';
   component: DeclComponent;
   props: Record<string, DeclUIComponentPropValue>;
   children: DeclUIElement[];
 }
 
-type DeclUIElement = DeclUINativeElement | DeclUIComponentElement;
+export type DeclUIElement = DeclUINativeElement | DeclUIComponentElement;
 
-type DeclComponent = {
+export type DeclComponent = {
+  tag: 'ui';
   name: string;
   description?: string;
-  props: DeclKeyValueType[];
+  props: DeclVarDefinition[];
   return: DeclType;
   body: DeclValue;
+}
+
+export type DeclUIRule = {
+  tag: 'uirule';
+  selector: string;
+  type: DeclType;
+  editor: DeclUIElement;
 }
