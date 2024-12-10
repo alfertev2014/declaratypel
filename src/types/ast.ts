@@ -88,6 +88,17 @@ export type DeclStructValue = Record<string, DeclAnyValue>;
 export type DeclValue = DeclPrimitiveValue | Array<DeclAnyValue> | DeclStructValue;
 
 
+export enum DeclASTTag {
+  TAGGED = 'tagged',
+  LITERAL = 'literal',
+  LAMBDA = 'lambda',
+  SCOPE = 'scope',
+  TYPEDEF = 'typedef',
+  REF = 'ref',
+  ANNOTATION = 'oftype',
+}
+
+
 // Abstract syntax trees of sources (serializable to JSON)
 
 export interface DeclASTNode {
@@ -149,47 +160,4 @@ export type DeclTypeAnnotation = {
   type: DeclType;
 }
 
-export type DeclSwitch = {
-  tag: 'switch';
-  switch: DeclExpression;
-  cases: [DeclExpression, DeclExpression][];
-}
-
 export type DeclExpression = DeclLiteral | DeclTaggedExpression | DeclLambdaExpression | DeclScope | DeclTypeAnnotation;
-
-
-// UI
-
-export type DeclUINativeElement = {
-  tag: 'UINativeElement';
-  name: string;
-  attrs: Record<string, DeclPrimitiveValue>;
-  children: DeclUIElement[];
-}
-
-export type DeclUIComponentPropValue = DeclPrimitiveValue | DeclUIComponentElement;
-
-export type DeclUIComponentElement = {
-  tag: 'UIComponentElement';
-  component: DeclComponent;
-  props: Record<string, DeclUIComponentPropValue>;
-  children: DeclUIElement[];
-}
-
-export type DeclUIElement = DeclUINativeElement | DeclUIComponentElement;
-
-export type DeclComponent = {
-  tag: 'ui';
-  name: string;
-  description?: string;
-  props: DeclVarDefinition[];
-  return: DeclType;
-  body: DeclValue;
-}
-
-export type DeclUIRule = {
-  tag: 'uirule';
-  selector: string;
-  type: DeclType;
-  editor: DeclUIElement;
-}
