@@ -1,14 +1,14 @@
 import React from "react";
-import { TemplateNode } from "../../types";
 import TextStructureNode from "./components/TextStructureNode";
 import NativeStructureNode from "./components/NativeStructureNode";
 import ComponentStructureNode from "./components/ComponentStructureNode";
+import { DeclUITemplate } from "../../types/ui/template";
 
-export const renderTemplateStructure = (template: TemplateNode): React.ReactNode => {
+export const renderTemplateStructure = (template: DeclUITemplate): React.ReactNode => {
   if (Array.isArray(template)) {
     return template.map(t => <div>{renderTemplateStructure(t)}</div>);
   } else if (typeof template === 'object') {
-    switch (template?.type) {
+    switch (template?.uiTag) {
       case 'element':
         return <NativeStructureNode element={template} />
       case 'component':

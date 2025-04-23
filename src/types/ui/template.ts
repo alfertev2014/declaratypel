@@ -1,44 +1,44 @@
-import { DeclExpression, DeclPrimitiveValue, DeclType, DeclValue, DeclVarDefinition } from "../ast";
+import { DeclPrimitiveValue, DeclValue } from "../ast/literalValues"
+import { DeclExpression } from "../ast/sourceExpressions"
+import { DeclType, DeclVarDefinition } from "../ast/typeExpressions"
 
-export enum DeclUITag {
-  ELEMENT = 'element',
-  COMPONENT = 'component',
-}
+export const ELEMENT = "element"
+export const COMPONENT = "component"
 
-export interface DeclUITemplateNode {
-  uiTag: string;
-}
+export type DeclUITag = typeof ELEMENT | typeof COMPONENT
 
 export type DeclUITemplateNativeElement = {
-  uiTag: 'NativeElement';
-  name: string;
-  attrs: Record<string, DeclPrimitiveValue>;
-  children: DeclUITemplateElement[];
+  uiTag: typeof ELEMENT
+  name: string
+  attrs: Record<string, DeclPrimitiveValue>
+  children: DeclUITemplate
 }
 
-export type DeclUIComponentPropExpression = DeclExpression | DeclUITemplateComponentElement;
+export type DeclUIComponentPropExpression = DeclExpression | DeclUITemplateComponentElement
 
 export type DeclUITemplateComponentElement = {
-  uiTag: 'UIComponentElement';
-  component: DeclComponent;
-  props: Record<string, DeclUIComponentPropExpression>;
-  children: DeclUITemplateElement[];
+  uiTag: typeof COMPONENT
+  component: DeclComponent
+  props: Record<string, DeclUIComponentPropExpression>
+  children: DeclUITemplate
 }
 
-export type DeclUITemplateElement = DeclUITemplateNativeElement | DeclUITemplateComponentElement;
+export type DeclUITemplateElement = DeclUITemplateNativeElement | DeclUITemplateComponentElement
+
+export type DeclUITemplate = DeclUITemplateElement | DeclUITemplateElement[] | DeclPrimitiveValue
 
 export type DeclComponent = {
-  tag: 'ui';
-  name: string;
-  description?: string;
-  props: DeclVarDefinition[];
-  return: DeclType;
-  body: DeclValue;
+  tag: "ui"
+  name: string
+  description?: string
+  props: DeclVarDefinition[]
+  return: DeclType
+  body: DeclValue
 }
 
 export type DeclUIRule = {
-  tag: 'uirule';
-  selector: string;
-  type: DeclType;
-  editor: DeclUITemplateElement;
+  tag: "uirule"
+  selector: string
+  type: DeclType
+  editor: DeclUITemplateElement
 }

@@ -1,11 +1,11 @@
 import { FC, useState } from "react"
-import { ElementNode } from "../../../../types"
 import StructureNode from "../StructureNode"
 import { renderPropValueShort, renderTemplateStructure } from "../../util"
 import React from "react"
+import { DeclUITemplateNativeElement } from "../../../../types/ui/template"
 
 export type NativeStructureNodeProps = {
-  element: ElementNode
+  element: DeclUITemplateNativeElement
 }
 
 const NativeStructureNode: FC<NativeStructureNodeProps> = ({ element }) => {
@@ -24,11 +24,11 @@ const NativeStructureNode: FC<NativeStructureNodeProps> = ({ element }) => {
               </span>{" "}
             </React.Fragment>
           ))}
-          {!expanded ? ".../" : element.content == null ? "/" : undefined}&gt;
+          {!expanded ? ".../" : element.children == null ? "/" : undefined}&gt;
         </span>
       }
     >
-      {renderTemplateStructure(element.content)}
+      {renderTemplateStructure(element.children)}
     </StructureNode>
   )
 }

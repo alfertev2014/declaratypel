@@ -24,7 +24,7 @@ const ComponentStructureNode: FC<ComponentStructureNodeProps> = ({ component }) 
         </span>
       }
     >
-      {renderTemplateStructure(component.)}
+      {renderTemplateStructure(component.children)}
     </StructureNode>
   )
 }

@@ -1,27 +1,28 @@
 import { FC } from "react"
 
 import styles from './styles.module.scss'
-import { TemplateNode } from "../../types"
 import { renderTemplateStructure } from "./util"
+import { DeclUITemplate } from "../../types/ui/template"
 
 export type StructureProps = {
   isOpen?: boolean
 }
 
-const data: TemplateNode = [
+const data: DeclUITemplate = [
   {
-    type: 'element',
+    uiTag: 'element',
     name: 'div',
     attrs: {
       foo: 'bar'
     },
-    content: {
-      type: 'element',
+    children: {
+      uiTag: 'element',
       name: 'div',
       attrs: {
         foo: 'bar',
         b: true
-      }
+      },
+      children: []
     },
   },
 ]
