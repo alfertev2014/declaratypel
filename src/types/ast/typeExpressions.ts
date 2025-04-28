@@ -1,90 +1,191 @@
+import { DeclPrimitiveValue } from "./literalValues"
+
 export const STRING = "string"
 export const NUMBER = "number"
+export const BIGINT = "bigint"
 export const BOOLEAN = "boolean"
-export const NULL = "null"
-export const UNDEFINED = "undefined"
 export const UNKNOWN = "unknown"
 export const NEVER = "never"
 
-export type DeclBuiltinType =
+export type DeclBuiltinTag =
   | typeof STRING
   | typeof NUMBER
+  | typeof BIGINT
   | typeof BOOLEAN
-  | typeof NULL
-  | typeof UNDEFINED
   | typeof UNKNOWN
   | typeof NEVER
 
+export const BUILTIN = "builtin"
+export const LITERAL_TYPE = "literal"
 export const OBJECT = "object"
 export const ARRAY = "array"
 export const TUPLE = "tuple"
-export const TAGGED = "tagged"
+export const FUNCTIONAL = "functional"
 export const UNION = "union"
 export const INTERSECTION = "intersection"
+export const CONDITIONAL = "conditional"
 export const GENERIC = "generic"
+export const GENERIC_CALL = "genericCall"
 export const TYPE_IDENTIFIER = "identifier"
 
 export type DeclTypeCtor =
+  | typeof BUILTIN
+  | typeof LITERAL_TYPE
   | typeof OBJECT
   | typeof ARRAY
-  | typeof TAGGED
+  | typeof FUNCTIONAL
   | typeof UNION
   | typeof INTERSECTION
+  | typeof CONDITIONAL
   | typeof GENERIC
+  | typeof GENERIC_CALL
   | typeof TYPE_IDENTIFIER
 
-export interface DeclCompoundType {
-  tctor: DeclTypeCtor
+export type DeclBuiltinType = {
+  readonly tctor: typeof BUILTIN
+  readonly tag: DeclBuiltinTag
+}
+export const builtinType = (tag: DeclBuiltinTag): DeclBuiltinType => ({
+  tctor: BUILTIN,
+  tag,
+})
+
+export type DeclLiteralType = {
+  readonly tctor: typeof LITERAL_TYPE
+  readonly value: DeclPrimitiveValue
+}
+export const literalType = (value: DeclPrimitiveValue): DeclLiteralType => ({
+  tctor: LITERAL_TYPE,
+  value,
+})
+
+export type DeclPropDefinition = {
+  readonly name: string | number
+  readonly description?: string
+  readonly type: DeclType
+  readonly optional: boolean
+  readonly readonly: boolean
 }
 
-export type DeclVarDefinition = {
-  name: string
-  description?: string
-  type: DeclType
+export type DeclIndexerDefinition = {
+  readonly description?: string
+  readonly indexType: DeclType
+  readonly type: DeclType
+  readonly optional: boolean
+  readonly readonly: boolean
 }
 
 export type DeclObjectType = {
-  tctor: typeof OBJECT
-  props: DeclVarDefinition[]
+  readonly tctor: typeof OBJECT
+  readonly props: readonly DeclPropDefinition[]
+  readonly indexer?: DeclIndexerDefinition
 }
+export const objectType = (props: readonly DeclPropDefinition[], indexer?: DeclIndexerDefinition): DeclObjectType => ({
+  tctor: OBJECT,
+  props,
+  indexer
+})
 
 export type DeclArrayType = {
-  tctor: typeof ARRAY
-  items: DeclType
+  readonly tctor: typeof ARRAY
+  readonly items: DeclType
 }
+export const arrayType = (items: DeclType): DeclArrayType => ({
+  tctor: ARRAY,
+  items,
+})
 
-export type DeclTaggedType = {
-  tctor: typeof TAGGED
-  tag: string
-  body: DeclType
+export type DeclTupleType = {
+  readonly tctor: typeof TUPLE
+  readonly items: readonly DeclType[]
+  readonly rest?: DeclType
 }
+export const tupleType = (items: readonly DeclType[], rest?: DeclType): DeclTupleType => ({
+  tctor: TUPLE,
+  items,
+  rest,
+})
+
+export type DeclFunctionalType = {
+  readonly tctor: typeof FUNCTIONAL
+  readonly result: DeclType
+  readonly args: readonly DeclPropDefinition[]
+  readonly rest?: DeclPropDefinition
+}
+export const funcType = (
+  result: DeclType,
+  args: readonly DeclPropDefinition[],
+  rest?: DeclPropDefinition,
+): DeclFunctionalType => ({
+  tctor: FUNCTIONAL,
+  result,
+  args,
+  rest,
+})
 
 export type DeclUnionType = {
-  tctor: typeof UNION
-  args: DeclType[]
+  readonly tctor: typeof UNION
+  readonly args: DeclType[]
 }
+export const unionType = (args: DeclType[]): DeclUnionType => ({
+  tctor: UNION,
+  args,
+})
 
 export type DeclIntersectionType = {
-  tctor: typeof INTERSECTION
-  args: DeclType[]
+  readonly tctor: typeof INTERSECTION
+  readonly args: DeclType[]
 }
+export const intersectionType = (args: DeclType[]): DeclIntersectionType => ({
+  tctor: INTERSECTION,
+  args,
+})
 
 export type DeclTypeVarDefinition = {
-  name: string
-  upperBound?: DeclType
-  lowerBound?: DeclType
+  readonly name: string
+  readonly upperBound?: DeclType
+  readonly default?: DeclType
 }
 
 export type DeclGenericType = {
-  tctor: typeof GENERIC
-  targs: DeclTypeVarDefinition[]
-  body: DeclType
+  readonly tctor: typeof GENERIC
+  readonly targs: DeclTypeVarDefinition[]
+  readonly body: DeclType
 }
+export const genericType = (targs: DeclTypeVarDefinition[], body: DeclType): DeclGenericType => ({
+  tctor: GENERIC,
+  targs,
+  body,
+})
+
+export type DeclGenericCallType = {
+  readonly tctor: typeof GENERIC_CALL
+  readonly name: string
+  readonly args: DeclType[]
+}
+export const genericCallType = (name: string, args: DeclType[]): DeclGenericCallType => ({
+  tctor: GENERIC_CALL,
+  name,
+  args,
+})
 
 export type DeclTypeIdentifier = {
-  tctor: typeof TYPE_IDENTIFIER
-  name: string
-  args?: DeclType[]
+  readonly tctor: typeof TYPE_IDENTIFIER
+  readonly name: string
 }
+export const typeIdentifier = (name: string): DeclTypeIdentifier => ({
+  tctor: TYPE_IDENTIFIER,
+  name,
+})
 
-export type DeclType = DeclBuiltinType | DeclCompoundType
+export type DeclType =
+  | DeclBuiltinType
+  | DeclLiteralType
+  | DeclObjectType
+  | DeclArrayType
+  | DeclTupleType
+  | DeclFunctionalType
+  | DeclUnionType
+  | DeclIntersectionType
+  | DeclGenericType
+  | DeclTypeIdentifier

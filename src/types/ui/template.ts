@@ -1,6 +1,6 @@
 import { DeclPrimitiveValue, DeclValue } from "../ast/literalValues"
 import { DeclExpression } from "../ast/sourceExpressions"
-import { DeclType, DeclVarDefinition } from "../ast/typeExpressions"
+import { DeclType, DeclPropDefinition } from "../ast/typeExpressions"
 
 export const ELEMENT = "element"
 export const COMPONENT = "component"
@@ -31,7 +31,7 @@ export type DeclComponent = {
   tag: "ui"
   name: string
   description?: string
-  props: DeclVarDefinition[]
+  props: DeclPropDefinition[]
   return: DeclType
   body: DeclValue
 }
