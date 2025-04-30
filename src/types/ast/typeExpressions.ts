@@ -106,16 +106,23 @@ export const tupleType = (items: readonly DeclType[], rest?: DeclType): DeclTupl
   rest,
 })
 
+export type DeclArgDefinition = {
+  readonly name: string
+  readonly description?: string
+  readonly type: DeclType
+  readonly optional: boolean
+}
+
 export type DeclFunctionalType = {
   readonly tctor: typeof FUNCTIONAL
   readonly result: DeclType
-  readonly args: readonly DeclPropDefinition[]
-  readonly rest?: DeclPropDefinition
+  readonly args: readonly DeclArgDefinition[]
+  readonly rest?: DeclArgDefinition
 }
 export const funcType = (
   result: DeclType,
-  args: readonly DeclPropDefinition[],
-  rest?: DeclPropDefinition,
+  args: readonly DeclArgDefinition[],
+  rest?: DeclArgDefinition | undefined,
 ): DeclFunctionalType => ({
   tctor: FUNCTIONAL,
   result,
@@ -125,18 +132,18 @@ export const funcType = (
 
 export type DeclUnionType = {
   readonly tctor: typeof UNION
-  readonly args: DeclType[]
+  readonly args: readonly DeclType[]
 }
-export const unionType = (args: DeclType[]): DeclUnionType => ({
+export const unionType = (args: readonly DeclType[]): DeclUnionType => ({
   tctor: UNION,
   args,
 })
 
 export type DeclIntersectionType = {
   readonly tctor: typeof INTERSECTION
-  readonly args: DeclType[]
+  readonly args: readonly DeclType[]
 }
-export const intersectionType = (args: DeclType[]): DeclIntersectionType => ({
+export const intersectionType = (args: readonly DeclType[]): DeclIntersectionType => ({
   tctor: INTERSECTION,
   args,
 })
@@ -149,10 +156,10 @@ export type DeclTypeVarDefinition = {
 
 export type DeclGenericType = {
   readonly tctor: typeof GENERIC
-  readonly targs: DeclTypeVarDefinition[]
+  readonly targs: readonly DeclTypeVarDefinition[]
   readonly body: DeclType
 }
-export const genericType = (targs: DeclTypeVarDefinition[], body: DeclType): DeclGenericType => ({
+export const genericType = (targs: readonly DeclTypeVarDefinition[], body: DeclType): DeclGenericType => ({
   tctor: GENERIC,
   targs,
   body,
@@ -161,9 +168,9 @@ export const genericType = (targs: DeclTypeVarDefinition[], body: DeclType): Dec
 export type DeclGenericCallType = {
   readonly tctor: typeof GENERIC_CALL
   readonly name: string
-  readonly args: DeclType[]
+  readonly args: readonly DeclType[]
 }
-export const genericCallType = (name: string, args: DeclType[]): DeclGenericCallType => ({
+export const genericCallType = (name: string, args: readonly DeclType[]): DeclGenericCallType => ({
   tctor: GENERIC_CALL,
   name,
   args,

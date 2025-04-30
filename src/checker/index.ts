@@ -1,23 +1,35 @@
 import {
+  ARRAY_DESTRUCT,
+  DeclArrayDestruct,
+  DeclDefinition,
+  DeclDestruct,
   DeclExpression,
   DeclIdentifier,
+  DeclVarDefinition,
   ELLIPSIS,
   IDENTIFIER,
   INDEXER,
+  LAMBDA,
   LITERAL,
+  OBJECT_DESTRUCT,
   OBJECT_TEMPLATE,
   PROPERTY,
+  VAR_DEFINITION,
 } from "../types/ast/sourceExpressions"
 import {
+  ARRAY,
+  arrayType,
   BIGINT,
   BOOLEAN,
   BUILTIN,
   builtinType,
+  DeclArgDefinition,
   DeclIndexerDefinition,
   DeclObjectType,
   DeclPropDefinition,
   DeclType,
   DeclTypeIdentifier,
+  funcType,
   LITERAL_TYPE,
   literalType,
   NEVER,
@@ -25,18 +37,22 @@ import {
   OBJECT,
   objectType,
   STRING,
+  TUPLE,
   TYPE_IDENTIFIER,
   UNKNOWN,
 } from "../types/ast/typeExpressions"
 
 export type TypeBounds = {
+  readonly scope: ScopeFrame
   /*mutable*/ upperBound: DeclType
   /*mutable*/ lowerBound: DeclType
 }
 export const typeBounds = (
+  scope: ScopeFrame,
   upperBound: DeclType = builtinType(UNKNOWN),
   lowerBound: DeclType = builtinType(NEVER),
 ): TypeBounds => ({
+  scope,
   upperBound,
   lowerBound,
 })
@@ -71,6 +87,12 @@ const lookupVar = (scope: ScopeFrame, identifier: DeclIdentifier): VarScopeFrame
   throw new Error(`Unknown variable identifier "${identifier.name}"`)
 }
 
+const withVar = (scope: ScopeFrame, identifier: DeclIdentifier, bounds: TypeBounds): ScopeFrame => ({
+  parent: scope,
+  var: identifier,
+  bounds,
+})
+
 const lookupType = (scope: ScopeFrame, identifier: DeclTypeIdentifier): TypeScopeFrame => {
   while (scope) {
     if ("type" in scope && scope.type.name === identifier.name) {
@@ -80,6 +102,12 @@ const lookupType = (scope: ScopeFrame, identifier: DeclTypeIdentifier): TypeScop
   }
   throw new Error(`Unknown type identifier "${identifier.name}"`)
 }
+
+const withTypeVar = (scope: ScopeFrame, identifier: DeclTypeIdentifier, bounds: TypeBounds): ScopeFrame => ({
+  parent: scope,
+  type: identifier,
+  bounds,
+})
 
 const typeMismatch = (expected: DeclType, inferred: DeclType): never => {
   // TODO: type to string
@@ -123,16 +151,14 @@ const unreachable = (): never => {
   throw new Error("BUG: Unreachable code")
 }
 
-const unifyTypes = (expected: DeclType, inferred: DeclType, scope: ScopeFrame): void => {
-  if (expected.tctor === TYPE_IDENTIFIER) {
-    const expectedFrame = lookupType(scope, expected)
-    if (inferred.tctor === TYPE_IDENTIFIER) {
-      const inferredFrame = lookupType(scope, inferred)
-
-      // TODO: unify bounds
-      inferredFrame.bounds = expectedFrame.bounds
+const unifyTypes = (expected: TypeBounds, inferred: TypeBounds): void => {
+  if (expected.upperBound.tctor === TYPE_IDENTIFIER) {
+    const expectedFrame = lookupType(scope, expected.upperBound)
+    if (inferred.lowerBound.tctor === TYPE_IDENTIFIER) {
+      const inferredFrame = lookupType(scope, inferred.lowerBound)
+      unifyTypes(expected, inferredFrame.bounds, scope)
     } else {
-      unifyTypes(expectedFrame.bounds.upperBound, inferred, scope)
+      unifyTypes(expectedFrame.bounds, inferred, scope)
     }
     return
   }
@@ -211,21 +237,19 @@ export const indexTypeMismatch = (index: DeclExpression): never => {
 export const inferType = (expr: DeclExpression, scope: ScopeFrame): DeclType => {
   switch (expr.tag) {
     case IDENTIFIER: {
-      const inferredType = lookupVar(scope, expr)
-      return inferredType.bounds.lowerBound
+      return lookupVar(scope, expr).bounds.lowerBound
     }
     case LITERAL: {
       return literalType(expr.value)
     }
     case OBJECT_TEMPLATE: {
-      const props: DeclPropDefinition[] = []
+      const props: /*mutable*/ DeclPropDefinition[] = []
       let indexer: DeclIndexerDefinition | undefined = undefined
       for (const prop of expr.items) {
         if (prop.tag === PROPERTY) {
-          const type = inferType(prop.value, scope)
           props.push({
             name: prop.key,
-            type,
+            type: inferType(prop.value, scope),
             optional: false,
             readonly: false,
           })
@@ -261,6 +285,67 @@ export const inferType = (expr: DeclExpression, scope: ScopeFrame): DeclType => 
         }
       }
       return objectType(props, indexer)
+    }
+    case LAMBDA: {
+      let bodyScope = scope
+      const argTypes: /*mutable*/ DeclArgDefinition[] = []
+      let argNumber = 0
+      const checkArg = (arg: DeclDestruct, expected: DeclType): void => {
+        switch (arg.tag) {
+          case VAR_DEFINITION: {
+            bodyScope = withVar(bodyScope, arg.name, typeBounds(bodyScope, expected))
+            break
+          }
+          case ARRAY_DESTRUCT: {
+            if (expected.tctor === ARRAY) {
+              for (const item of arg.items) {
+                checkArg(item, expected.items)
+              }
+            } else if (expected.tctor === TUPLE) {
+              let i = 0
+              for (const item of arg.items) {
+                // TODO: rest of tuple
+                checkArg(item, expected.items[i] ?? literalType(undefined))
+                ++i
+              }
+            }
+            return typeMismatch(expected, arrayType(builtinType(UNKNOWN)))
+          }
+          case OBJECT_DESTRUCT: {
+            if (expected.tctor !== OBJECT) {
+              return typeMismatch(expected, objectType([]))
+            }
+            for (const prop of arg.props) {
+              // TODO
+            }
+            break
+          }
+          default:
+            return unreachable()
+        }
+      }
+
+      for (const arg of expr.args) {
+        const type = arg.type ?? (arg.pattern.value ? inferType(arg.pattern.value, bodyScope) : builtinType(UNKNOWN))
+        checkArg(arg.pattern, type)
+        argTypes.push({
+          name: arg.pattern.tag === VAR_DEFINITION ? arg.pattern.name.name : argNumber.toString(),
+          optional: !!arg.pattern.value || arg.pattern.tag === VAR_DEFINITION && !!arg.pattern.optional,
+          type,
+          description: arg.description
+        })
+        ++argNumber
+      }
+
+      if (expr.rest) {
+        checkArg(expr.rest, expr.restType ?? builtinType(UNKNOWN))
+      }
+      
+      return funcType(expr.resultType ?? inferType(expr.body, bodyScope), argTypes, expr.restType ? {
+        name: '...',
+        type: expr.restType,
+        optional: true
+      } : undefined)
     }
     default:
       return unreachable()

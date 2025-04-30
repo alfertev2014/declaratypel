@@ -160,10 +160,11 @@ export const obj = (
 
 export type DeclVarDefinition = {
   readonly tag: typeof VAR_DEFINITION
-  readonly name: string
+  readonly name: DeclIdentifier
   readonly value?: DeclExpression
+  readonly optional?: boolean
 }
-export const defVar = (name: string, value?: DeclExpression): DeclVarDefinition => ({
+export const defVar = (name: DeclIdentifier, value?: DeclExpression): DeclVarDefinition => ({
   tag: VAR_DEFINITION,
   name,
   value,
@@ -171,12 +172,12 @@ export const defVar = (name: string, value?: DeclExpression): DeclVarDefinition 
 
 export type DeclObjectDestruct = {
   readonly tag: typeof OBJECT_DESTRUCT
-  readonly props: DeclDestruct[]
+  readonly props: readonly DeclDestruct[]
   readonly rest?: DeclIdentifier
   readonly value?: DeclExpression
 }
 export const defObj = (
-  props: DeclDestruct[],
+  props: readonly DeclDestruct[],
   rest?: DeclIdentifier,
   value?: DeclExpression,
 ): DeclObjectDestruct => ({
@@ -188,12 +189,12 @@ export const defObj = (
 
 export type DeclArrayDestruct = {
   readonly tag: typeof ARRAY_DESTRUCT
-  readonly items: DeclDestruct[]
+  readonly items: readonly DeclDestruct[]
   readonly rest?: DeclIdentifier
   readonly value?: DeclExpression
 }
 export const defArr = (
-  items: DeclDestruct[],
+  items: readonly DeclDestruct[],
   rest?: DeclIdentifier,
   value?: DeclExpression,
 ): DeclArrayDestruct => ({
@@ -213,17 +214,17 @@ export type DeclDefinition = {
 
 export type DeclLambdaExpression = {
   readonly tag: typeof LAMBDA
-  readonly args: DeclDefinition[]
+  readonly args: readonly DeclDefinition[]
   readonly body: DeclExpression
   readonly resultType?: DeclType
-  readonly rest?: DeclIdentifier
+  readonly rest?: DeclVarDefinition | DeclArrayDestruct
   readonly restType?: DeclType
 }
 export const lambda = (
-  args: DeclDefinition[],
+  args: readonly DeclDefinition[],
   body: DeclExpression,
   resultType?: DeclType,
-  rest?: DeclIdentifier,
+  rest?: DeclVarDefinition | DeclArrayDestruct,
   restType?: DeclType,
 ): DeclLambdaExpression => ({
   tag: LAMBDA,
@@ -236,12 +237,12 @@ export const lambda = (
 
 export type DeclScope = {
   readonly tag: typeof SCOPE
-  readonly def: DeclDefinition[]
+  readonly def: readonly DeclDefinition[]
   readonly body: DeclExpression
   readonly mutable: boolean
 }
 export const scope = (
-  def: DeclDefinition[],
+  def: readonly DeclDefinition[],
   body: DeclExpression,
   mutable: boolean = false,
 ): DeclScope => ({
@@ -259,10 +260,10 @@ export type DeclTypeDefinition = {
 
 export type DeclTypeScope = {
   readonly tag: typeof TYPE_SCOPE
-  readonly def: DeclTypeDefinition[]
+  readonly def: readonly DeclTypeDefinition[]
   readonly body: DeclExpression
 }
-export const typeScope = (def: DeclTypeDefinition[], body: DeclExpression): DeclTypeScope => ({
+export const typeScope = (def: readonly DeclTypeDefinition[], body: DeclExpression): DeclTypeScope => ({
   tag: TYPE_SCOPE,
   def,
   body,

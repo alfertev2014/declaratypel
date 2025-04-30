@@ -3,6 +3,8 @@ export type DeclPrimitiveValue = string | number | boolean | bigint | null | und
 
 export type DeclAnyValue = DeclPrimitiveValue | object
 
-export type DeclStructValue = Record<string, DeclAnyValue>;
+export type DeclStructValue = {
+  readonly [key: string | number]: DeclAnyValue
+}
 
-export type DeclValue = DeclPrimitiveValue | Array<DeclAnyValue> | DeclStructValue;
+export type DeclValue = DeclPrimitiveValue | readonly DeclAnyValue[] | DeclStructValue;
