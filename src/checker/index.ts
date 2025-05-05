@@ -13,10 +13,14 @@ import {
   LITERAL,
   OBJECT_DESTRUCT,
   OBJECT_TEMPLATE,
+  PROP_DEFINITION,
   PROPERTY,
   VAR_DEFINITION,
 } from "../types/ast/sourceExpressions"
 import {
+  argArr,
+  argObj,
+  argVar,
   ARRAY,
   arrayType,
   BIGINT,
@@ -24,11 +28,14 @@ import {
   BUILTIN,
   builtinType,
   DeclArgDefinition,
+  DeclArgDestruct,
+  DeclArgPropDestruct,
   DeclIndexerDefinition,
   DeclObjectType,
   DeclPropDefinition,
   DeclType,
   DeclTypeIdentifier,
+  FUNCTIONAL,
   funcType,
   LITERAL_TYPE,
   literalType,
@@ -38,6 +45,7 @@ import {
   objectType,
   STRING,
   TUPLE,
+  tupleType,
   TYPE_IDENTIFIER,
   UNKNOWN,
 } from "../types/ast/typeExpressions"
@@ -151,20 +159,22 @@ const unreachable = (): never => {
   throw new Error("BUG: Unreachable code")
 }
 
-const unifyTypes = (expected: TypeBounds, inferred: TypeBounds): void => {
-  if (expected.upperBound.tctor === TYPE_IDENTIFIER) {
-    const expectedFrame = lookupType(scope, expected.upperBound)
-    if (inferred.lowerBound.tctor === TYPE_IDENTIFIER) {
-      const inferredFrame = lookupType(scope, inferred.lowerBound)
-      unifyTypes(expected, inferredFrame.bounds, scope)
+const unifyTypes = (expected: DeclType, inferred: DeclType, scope: ScopeFrame): void => {
+  if (expected.tctor === TYPE_IDENTIFIER) {
+    const expectedFrame = lookupType(scope, expected)
+    if (inferred.tctor === TYPE_IDENTIFIER) {
+      const inferredFrame = lookupType(scope, inferred)
+      unifyTypes(expectedFrame.bounds.upperBound, inferredFrame.bounds.lowerBound, scope)
     } else {
-      unifyTypes(expectedFrame.bounds, inferred, scope)
+      unifyTypes(expectedFrame.bounds.upperBound, inferred, scope)
+      expectedFrame.bounds.lowerBound = inferred // TODO: Widen
     }
     return
   }
   if (inferred.tctor === TYPE_IDENTIFIER) {
     const inferredFrame = lookupType(scope, inferred)
     unifyTypes(expected, inferredFrame.bounds.lowerBound, scope)
+    inferredFrame.bounds.upperBound = expected // TODO: Narrow
     return
   }
   if (inferred.tctor === BUILTIN && inferred.tag === NEVER) {
@@ -225,6 +235,23 @@ const unifyTypes = (expected: TypeBounds, inferred: TypeBounds): void => {
         return typeMismatch(expected, inferred)
       }
       return
+    }
+    case FUNCTIONAL: {
+      if (inferred.tctor === FUNCTIONAL) {
+        let i = 0
+        for ( ; i < expected.args.length; ++i) {
+          // contravariance!!!
+          unifyTypes(inferred.args[i]?.type ?? builtinType(UNKNOWN), expected.args[i].type, scope)
+        }
+        if (expected.rest) {
+          // contravariance!!!
+          unifyTypes(inferred.rest?.type ?? builtinType(UNKNOWN), expected.rest.type, scope)
+        }
+
+        unifyTypes(expected.result, inferred.result, scope)
+      } else {
+        return typeMismatch(expected, inferred)
+      }
     }
   }
 }
@@ -289,36 +316,74 @@ export const inferType = (expr: DeclExpression, scope: ScopeFrame): DeclType => 
     case LAMBDA: {
       let bodyScope = scope
       const argTypes: /*mutable*/ DeclArgDefinition[] = []
-      let argNumber = 0
-      const checkArg = (arg: DeclDestruct, expected: DeclType): void => {
+      const checkArg = (arg: DeclDestruct, expected: DeclType): DeclArgDestruct => {
         switch (arg.tag) {
           case VAR_DEFINITION: {
             bodyScope = withVar(bodyScope, arg.name, typeBounds(bodyScope, expected))
-            break
+            return argVar(arg.name)
           }
           case ARRAY_DESTRUCT: {
             if (expected.tctor === ARRAY) {
+              const subargs: DeclArgDestruct[] = []
               for (const item of arg.items) {
-                checkArg(item, expected.items)
+                subargs.push(checkArg(item, expected.items))
               }
+              const rest = arg.rest ? checkArg(arg.rest, expected.items) : undefined
+              return argArr(subargs, rest)
             } else if (expected.tctor === TUPLE) {
               let i = 0
+              const subargs: DeclArgDestruct[] = []
               for (const item of arg.items) {
-                // TODO: rest of tuple
-                checkArg(item, expected.items[i] ?? literalType(undefined))
+                subargs.push(checkArg(item, expected.items[i] ?? literalType(undefined)))
                 ++i
               }
+              // TODO: nested and multiple rest of tuples
+              return argArr(subargs)
+            } else {
+              return typeMismatch(expected, arrayType(builtinType(UNKNOWN)))
             }
-            return typeMismatch(expected, arrayType(builtinType(UNKNOWN)))
           }
           case OBJECT_DESTRUCT: {
             if (expected.tctor !== OBJECT) {
               return typeMismatch(expected, objectType([]))
             }
+            const subprops: DeclArgPropDestruct[] = []
             for (const prop of arg.props) {
-              // TODO
+              const expectedProp = expected.props.find(p => p.name === prop.name.name)
+              if (prop.tag === VAR_DEFINITION) {
+                if (expectedProp) {
+                  checkArg(prop, expectedProp.type)
+                  subprops.push(argVar(prop.name))
+                } else if (expected.indexer) {
+                  // TODO: optional and readonly
+                  checkArg(prop, expected.indexer.type)
+                  subprops.push(argVar(prop.name))
+                } else {
+                  return propMissed(expected, objectType([]), prop.name.name)
+                }
+              } else if (prop.tag === PROP_DEFINITION) {
+                if (expectedProp) {
+                  subprops.push({
+                    tag: PROP_DEFINITION,
+                    name: prop.name,
+                    pattern: checkArg(prop.pattern, expectedProp.type)
+                  })
+                } else if (expected.indexer) {
+                  // TODO: optional and readonly
+                  subprops.push({
+                    tag: PROP_DEFINITION,
+                    name: prop.name,
+                    pattern: checkArg(prop.pattern, expected.indexer.type)
+                  })
+                } else {
+                  return propMissed(expected, objectType([]), prop.name.name)
+                }
+              } else {
+                return unreachable()
+              }
             }
-            break
+            // TODO: rest destruct
+            return argObj(subprops)
           }
           default:
             return unreachable()
@@ -327,25 +392,25 @@ export const inferType = (expr: DeclExpression, scope: ScopeFrame): DeclType => 
 
       for (const arg of expr.args) {
         const type = arg.type ?? (arg.pattern.value ? inferType(arg.pattern.value, bodyScope) : builtinType(UNKNOWN))
-        checkArg(arg.pattern, type)
         argTypes.push({
-          name: arg.pattern.tag === VAR_DEFINITION ? arg.pattern.name.name : argNumber.toString(),
+          pattern: checkArg(arg.pattern, type),
           optional: !!arg.pattern.value || arg.pattern.tag === VAR_DEFINITION && !!arg.pattern.optional,
           type,
           description: arg.description
         })
-        ++argNumber
-      }
-
-      if (expr.rest) {
-        checkArg(expr.rest, expr.restType ?? builtinType(UNKNOWN))
       }
       
-      return funcType(expr.resultType ?? inferType(expr.body, bodyScope), argTypes, expr.restType ? {
-        name: '...',
-        type: expr.restType,
-        optional: true
-      } : undefined)
+      let restType: DeclArgDefinition | undefined = undefined
+      if (expr.rest) {
+        const type = expr.restType ?? (expr.restValue ? inferType(expr.restValue, bodyScope) : builtinType(UNKNOWN))
+        restType = {
+          pattern: checkArg(expr.rest, type),
+          type,
+          optional: true
+        }
+      }
+
+      return funcType(expr.resultType ?? inferType(expr.body, bodyScope), argTypes, restType)
     }
     default:
       return unreachable()

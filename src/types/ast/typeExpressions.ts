@@ -1,4 +1,5 @@
 import { DeclPrimitiveValue } from "./literalValues"
+import { ARRAY_DESTRUCT, DeclIdentifier, DeclVarDefinition, OBJECT_DESTRUCT, PROP_DEFINITION, VAR_DEFINITION } from "./sourceExpressions"
 
 export const STRING = "string"
 export const NUMBER = "number"
@@ -106,8 +107,53 @@ export const tupleType = (items: readonly DeclType[], rest?: DeclType): DeclTupl
   rest,
 })
 
+export type DeclArgVarDefinition = {
+  readonly tag: typeof VAR_DEFINITION
+  readonly name: DeclIdentifier
+}
+export const argVar = (name: DeclIdentifier): DeclArgVarDefinition => ({
+  tag: VAR_DEFINITION,
+  name,
+})
+
+export type DeclArgPropDestruct = DeclArgVarDefinition | {
+  tag: typeof PROP_DEFINITION
+  name: DeclIdentifier
+  pattern: DeclArgDestruct
+}
+
+export type DeclArgObjectDestruct = {
+  readonly tag: typeof OBJECT_DESTRUCT
+  readonly props: readonly DeclArgPropDestruct[]
+  readonly rest?: DeclArgDestruct
+}
+export const argObj = (
+  props: readonly DeclArgPropDestruct[],
+  rest?: DeclArgDestruct,
+): DeclArgObjectDestruct => ({
+  tag: OBJECT_DESTRUCT,
+  props,
+  rest,
+})
+
+export type DeclArgArrayDestruct = {
+  readonly tag: typeof ARRAY_DESTRUCT
+  readonly items: readonly DeclArgDestruct[]
+  readonly rest?: DeclArgDestruct
+}
+export const argArr = (
+  items: readonly DeclArgDestruct[],
+  rest?: DeclArgDestruct,
+): DeclArgArrayDestruct => ({
+  tag: ARRAY_DESTRUCT,
+  items,
+  rest,
+})
+
+export type DeclArgDestruct = DeclArgVarDefinition | DeclArgObjectDestruct | DeclArgArrayDestruct
+
 export type DeclArgDefinition = {
-  readonly name: string
+  readonly pattern: DeclArgDestruct
   readonly description?: string
   readonly type: DeclType
   readonly optional: boolean
