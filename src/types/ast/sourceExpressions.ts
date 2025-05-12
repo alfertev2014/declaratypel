@@ -1,5 +1,5 @@
-import { DeclPrimitiveValue } from "./literalValues"
-import { DeclType } from "./typeExpressions"
+import type { DeclPrimitiveValue } from "./literalValues.ts"
+import type { DeclType } from "./typeExpressions.ts"
 
 export const UNARY = "unary"
 export const BINARY = "binary"
@@ -141,12 +141,22 @@ export type DeclKeyValue = {
   readonly key: string | number
   readonly value: DeclExpression
 }
+export const propValue = (key: string | number, value: DeclExpression): DeclKeyValue => ({
+  tag: PROPERTY,
+  key,
+  value,
+})
 
 export type DeclIndexValue = {
   readonly tag: typeof INDEXER
   readonly index: DeclExpression
   readonly value: DeclExpression
 }
+export const indexValue = (index: DeclExpression, value: DeclExpression): DeclIndexValue => ({
+  tag: INDEXER,
+  index,
+  value,
+})
 
 export type DeclObjectItem = DeclKeyValue | DeclIndexValue | DeclEllipsisExpression
 
@@ -171,11 +181,13 @@ export const defVar = (name: DeclIdentifier, value?: DeclExpression): DeclVarDef
   value,
 })
 
-export type DeclPropDestruct = DeclVarDefinition | {
-  tag: typeof PROP_DEFINITION
-  readonly name: DeclIdentifier
-  readonly pattern: DeclDestruct
-}
+export type DeclPropDestruct =
+  | DeclVarDefinition
+  | {
+      tag: typeof PROP_DEFINITION
+      readonly name: DeclIdentifier
+      readonly pattern: DeclDestruct
+    }
 
 export type DeclObjectDestruct = {
   readonly tag: typeof OBJECT_DESTRUCT
@@ -215,9 +227,18 @@ export type DeclDestruct = DeclVarDefinition | DeclObjectDestruct | DeclArrayDes
 
 export type DeclDeclarator = {
   readonly pattern: DeclDestruct
-  readonly description?: string
   readonly type?: DeclType
+  readonly description?: string
 }
+export const decl = (
+  pattern: DeclDestruct,
+  type?: DeclType,
+  description?: string,
+): DeclDeclarator => ({
+  pattern,
+  type,
+  description,
+})
 
 export type DeclLambdaExpression = {
   readonly tag: typeof LAMBDA
@@ -234,7 +255,7 @@ export const lambda = (
   resultType?: DeclType,
   rest?: DeclVarDefinition | DeclArrayDestruct,
   restType?: DeclType,
-  restValue?: DeclExpression
+  restValue?: DeclExpression,
 ): DeclLambdaExpression => ({
   tag: LAMBDA,
   args,
@@ -250,7 +271,10 @@ export type DeclDefinition = {
   readonly def: readonly DeclDeclarator[]
   readonly mutable: boolean
 }
-export const definition = (def: readonly DeclDeclarator[], mutable: boolean = false): DeclDefinition => ({
+export const definition = (
+  def: readonly DeclDeclarator[],
+  mutable: boolean = false,
+): DeclDefinition => ({
   tag: DEFINITION,
   def,
   mutable,

@@ -1,5 +1,6 @@
-import { DeclPrimitiveValue } from "./literalValues"
-import { ARRAY_DESTRUCT, DeclIdentifier, DeclVarDefinition, OBJECT_DESTRUCT, PROP_DEFINITION, VAR_DEFINITION } from "./sourceExpressions"
+import type { DeclPrimitiveValue } from "./literalValues.ts"
+import type { PROP_DEFINITION} from "./sourceExpressions.ts";
+import { ARRAY_DESTRUCT, type DeclIdentifier, OBJECT_DESTRUCT, VAR_DEFINITION } from "./sourceExpressions.ts"
 
 export const STRING = "string"
 export const NUMBER = "number"
@@ -168,7 +169,7 @@ export type DeclFunctionalType = {
 export const funcType = (
   result: DeclType,
   args: readonly DeclArgDefinition[],
-  rest?: DeclArgDefinition | undefined,
+  rest?: DeclArgDefinition  ,
 ): DeclFunctionalType => ({
   tctor: FUNCTIONAL,
   result,

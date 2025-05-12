@@ -1,11 +1,8 @@
 import {
   ARRAY_DESTRUCT,
-  DeclArrayDestruct,
-  DeclDefinition,
-  DeclDestruct,
-  DeclExpression,
-  DeclIdentifier,
-  DeclVarDefinition,
+  type DeclDestruct,
+  type DeclExpression,
+  type DeclIdentifier,
   ELLIPSIS,
   IDENTIFIER,
   INDEXER,
@@ -16,7 +13,7 @@ import {
   PROP_DEFINITION,
   PROPERTY,
   VAR_DEFINITION,
-} from "../types/ast/sourceExpressions"
+} from "../types/ast/sourceExpressions.ts"
 import {
   argArr,
   argObj,
@@ -27,14 +24,14 @@ import {
   BOOLEAN,
   BUILTIN,
   builtinType,
-  DeclArgDefinition,
-  DeclArgDestruct,
-  DeclArgPropDestruct,
-  DeclIndexerDefinition,
-  DeclObjectType,
-  DeclPropDefinition,
-  DeclType,
-  DeclTypeIdentifier,
+  type DeclArgDefinition,
+  type DeclArgDestruct,
+  type DeclArgPropDestruct,
+  type DeclIndexerDefinition,
+  type DeclObjectType,
+  type DeclPropDefinition,
+  type DeclType,
+  type DeclTypeIdentifier,
   FUNCTIONAL,
   funcType,
   LITERAL_TYPE,
@@ -45,24 +42,20 @@ import {
   objectType,
   STRING,
   TUPLE,
-  tupleType,
   TYPE_IDENTIFIER,
   UNKNOWN,
-} from "../types/ast/typeExpressions"
+} from "../types/ast/typeExpressions.ts"
 
 export type TypeBounds = {
   readonly scope: ScopeFrame
   /*mutable*/ upperBound: DeclType
-  /*mutable*/ lowerBound: DeclType
 }
 export const typeBounds = (
   scope: ScopeFrame,
   upperBound: DeclType = builtinType(UNKNOWN),
-  lowerBound: DeclType = builtinType(NEVER),
 ): TypeBounds => ({
   scope,
   upperBound,
-  lowerBound,
 })
 
 type VarScopeFrame = {
@@ -95,7 +88,11 @@ const lookupVar = (scope: ScopeFrame, identifier: DeclIdentifier): VarScopeFrame
   throw new Error(`Unknown variable identifier "${identifier.name}"`)
 }
 
-const withVar = (scope: ScopeFrame, identifier: DeclIdentifier, bounds: TypeBounds): ScopeFrame => ({
+const withVar = (
+  scope: ScopeFrame,
+  identifier: DeclIdentifier,
+  bounds: TypeBounds,
+): ScopeFrame => ({
   parent: scope,
   var: identifier,
   bounds,
@@ -111,7 +108,11 @@ const lookupType = (scope: ScopeFrame, identifier: DeclTypeIdentifier): TypeScop
   throw new Error(`Unknown type identifier "${identifier.name}"`)
 }
 
-const withTypeVar = (scope: ScopeFrame, identifier: DeclTypeIdentifier, bounds: TypeBounds): ScopeFrame => ({
+const withTypeVar = (
+  scope: ScopeFrame,
+  identifier: DeclTypeIdentifier,
+  bounds: TypeBounds,
+): ScopeFrame => ({
   parent: scope,
   type: identifier,
   bounds,
@@ -164,16 +165,17 @@ const unifyTypes = (expected: DeclType, inferred: DeclType, scope: ScopeFrame): 
     const expectedFrame = lookupType(scope, expected)
     if (inferred.tctor === TYPE_IDENTIFIER) {
       const inferredFrame = lookupType(scope, inferred)
-      unifyTypes(expectedFrame.bounds.upperBound, inferredFrame.bounds.lowerBound, scope)
+      unifyTypes(expectedFrame.bounds.upperBound, inferredFrame.bounds.upperBound, scope)
+      expectedFrame.bounds = inferredFrame.bounds
     } else {
       unifyTypes(expectedFrame.bounds.upperBound, inferred, scope)
-      expectedFrame.bounds.lowerBound = inferred // TODO: Widen
+      expectedFrame.bounds.upperBound = inferred // TODO: Widen
     }
     return
   }
   if (inferred.tctor === TYPE_IDENTIFIER) {
     const inferredFrame = lookupType(scope, inferred)
-    unifyTypes(expected, inferredFrame.bounds.lowerBound, scope)
+    unifyTypes(expected, inferredFrame.bounds.upperBound, scope)
     inferredFrame.bounds.upperBound = expected // TODO: Narrow
     return
   }
@@ -239,7 +241,7 @@ const unifyTypes = (expected: DeclType, inferred: DeclType, scope: ScopeFrame): 
     case FUNCTIONAL: {
       if (inferred.tctor === FUNCTIONAL) {
         let i = 0
-        for ( ; i < expected.args.length; ++i) {
+        for (; i < expected.args.length; ++i) {
           // contravariance!!!
           unifyTypes(inferred.args[i]?.type ?? builtinType(UNKNOWN), expected.args[i].type, scope)
         }
@@ -258,13 +260,13 @@ const unifyTypes = (expected: DeclType, inferred: DeclType, scope: ScopeFrame): 
 
 export const indexTypeMismatch = (index: DeclExpression): never => {
   // TODO: Expression to string
-  throw new Error(`Type of index expression '${index}' must be assignable to 'string | number'.`)
+  throw new Error(`Type of index expression '${index.tag}' must be assignable to 'string | number'.`)
 }
 
 export const inferType = (expr: DeclExpression, scope: ScopeFrame): DeclType => {
   switch (expr.tag) {
     case IDENTIFIER: {
-      return lookupVar(scope, expr).bounds.lowerBound
+      return lookupVar(scope, expr).bounds.upperBound
     }
     case LITERAL: {
       return literalType(expr.value)
@@ -273,42 +275,50 @@ export const inferType = (expr: DeclExpression, scope: ScopeFrame): DeclType => 
       const props: /*mutable*/ DeclPropDefinition[] = []
       let indexer: DeclIndexerDefinition | undefined = undefined
       for (const prop of expr.items) {
-        if (prop.tag === PROPERTY) {
-          props.push({
-            name: prop.key,
-            type: inferType(prop.value, scope),
-            optional: false,
-            readonly: false,
-          })
-        } else if (prop.tag === INDEXER) {
-          const indexType = inferType(prop.index, scope)
-          const type = inferType(prop.value, scope)
-          if (indexType.tctor === LITERAL_TYPE) {
-            if (typeof indexType.value === "string" || typeof indexType.value === "number") {
-              props.push({
-                name: indexType.value,
+        switch (prop.tag) {
+          case PROPERTY: {
+            props.push({
+              name: prop.key,
+              type: inferType(prop.value, scope),
+              optional: false,
+              readonly: false,
+            })
+            break
+          }
+          case INDEXER: {
+            const indexType = inferType(prop.index, scope)
+            const type = inferType(prop.value, scope)
+            if (indexType.tctor === LITERAL_TYPE) {
+              if (typeof indexType.value === "string" || typeof indexType.value === "number") {
+                props.push({
+                  name: indexType.value,
+                  type,
+                  optional: false,
+                  readonly: false,
+                })
+              } else {
+                return indexTypeMismatch(prop.index)
+              }
+            } else if (
+              indexType.tctor === BUILTIN &&
+              (indexType.tag === "string" || indexType.tag === "number")
+            ) {
+              indexer = {
+                indexType,
                 type,
                 optional: false,
                 readonly: false,
-              })
+              }
             } else {
-              return indexTypeMismatch(prop.index)
+              throw new Error("TODO: Check indexType is subtype of string | number.")
             }
-          } else if (
-            indexType.tctor === BUILTIN &&
-            (indexType.tag === "string" || indexType.tag === "number")
-          ) {
-            indexer = {
-              indexType,
-              type,
-              optional: false,
-              readonly: false,
-            }
-          } else {
-            throw new Error("TODO: Check indexType is subtype of string | number.")
+            break
           }
-        } else if (prop.tag === ELLIPSIS) {
-          throw new Error("TODO: Need exact types")
+          case ELLIPSIS: {
+            throw new Error("TODO: Need exact types")
+          }
+          default:
+            return unreachable()
         }
       }
       return objectType(props, indexer)
@@ -349,7 +359,7 @@ export const inferType = (expr: DeclExpression, scope: ScopeFrame): DeclType => 
             }
             const subprops: DeclArgPropDestruct[] = []
             for (const prop of arg.props) {
-              const expectedProp = expected.props.find(p => p.name === prop.name.name)
+              const expectedProp = expected.props.find((p) => p.name === prop.name.name)
               if (prop.tag === VAR_DEFINITION) {
                 if (expectedProp) {
                   checkArg(prop, expectedProp.type)
@@ -366,14 +376,14 @@ export const inferType = (expr: DeclExpression, scope: ScopeFrame): DeclType => 
                   subprops.push({
                     tag: PROP_DEFINITION,
                     name: prop.name,
-                    pattern: checkArg(prop.pattern, expectedProp.type)
+                    pattern: checkArg(prop.pattern, expectedProp.type),
                   })
                 } else if (expected.indexer) {
                   // TODO: optional and readonly
                   subprops.push({
                     tag: PROP_DEFINITION,
                     name: prop.name,
-                    pattern: checkArg(prop.pattern, expected.indexer.type)
+                    pattern: checkArg(prop.pattern, expected.indexer.type),
                   })
                 } else {
                   return propMissed(expected, objectType([]), prop.name.name)
@@ -391,22 +401,27 @@ export const inferType = (expr: DeclExpression, scope: ScopeFrame): DeclType => 
       }
 
       for (const arg of expr.args) {
-        const type = arg.type ?? (arg.pattern.value ? inferType(arg.pattern.value, bodyScope) : builtinType(UNKNOWN))
+        const type =
+          arg.type ??
+          (arg.pattern.value ? inferType(arg.pattern.value, bodyScope) : builtinType(UNKNOWN))
         argTypes.push({
           pattern: checkArg(arg.pattern, type),
-          optional: !!arg.pattern.value || arg.pattern.tag === VAR_DEFINITION && !!arg.pattern.optional,
+          optional:
+            !!arg.pattern.value || (arg.pattern.tag === VAR_DEFINITION && !!arg.pattern.optional),
           type,
-          description: arg.description
+          description: arg.description,
         })
       }
-      
+
       let restType: DeclArgDefinition | undefined = undefined
       if (expr.rest) {
-        const type = expr.restType ?? (expr.restValue ? inferType(expr.restValue, bodyScope) : builtinType(UNKNOWN))
+        const type =
+          expr.restType ??
+          (expr.restValue ? inferType(expr.restValue, bodyScope) : builtinType(UNKNOWN))
         restType = {
           pattern: checkArg(expr.rest, type),
           type,
-          optional: true
+          optional: true,
         }
       }
 
