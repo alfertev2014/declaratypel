@@ -30,7 +30,10 @@ export type DeclUnaryExpression = {
   readonly name: DeclUnaryOperator
   readonly body: DeclExpression
 }
-export const unary = (name: DeclUnaryOperator, body: DeclExpression): DeclUnaryExpression => ({
+export const unary = (
+  name: DeclUnaryOperator,
+  body: DeclExpression,
+): DeclUnaryExpression => ({
   tag: UNARY,
   name,
   body,
@@ -131,7 +134,9 @@ export type DeclArray = {
   readonly tag: typeof ARRAY_TEMPLATE
   readonly items: readonly (DeclExpression | DeclEllipsisExpression)[]
 }
-export const arr = (items: readonly (DeclExpression | DeclEllipsisExpression)[]): DeclArray => ({
+export const arr = (
+  items: readonly (DeclExpression | DeclEllipsisExpression)[],
+): DeclArray => ({
   tag: ARRAY_TEMPLATE,
   items,
 })
@@ -141,7 +146,10 @@ export type DeclKeyValue = {
   readonly key: string | number
   readonly value: DeclExpression
 }
-export const propValue = (key: string | number, value: DeclExpression): DeclKeyValue => ({
+export const propValue = (
+  key: string | number,
+  value: DeclExpression,
+): DeclKeyValue => ({
   tag: PROPERTY,
   key,
   value,
@@ -152,13 +160,19 @@ export type DeclIndexValue = {
   readonly index: DeclExpression
   readonly value: DeclExpression
 }
-export const indexValue = (index: DeclExpression, value: DeclExpression): DeclIndexValue => ({
+export const indexValue = (
+  index: DeclExpression,
+  value: DeclExpression,
+): DeclIndexValue => ({
   tag: INDEXER,
   index,
   value,
 })
 
-export type DeclObjectItem = DeclKeyValue | DeclIndexValue | DeclEllipsisExpression
+export type DeclObjectItem =
+  | DeclKeyValue
+  | DeclIndexValue
+  | DeclEllipsisExpression
 
 export type DeclObject = {
   readonly tag: typeof OBJECT_TEMPLATE
@@ -175,7 +189,10 @@ export type DeclVarDefinition = {
   readonly value?: DeclExpression
   readonly optional?: boolean
 }
-export const defVar = (name: DeclIdentifier, value?: DeclExpression): DeclVarDefinition => ({
+export const defVar = (
+  name: DeclIdentifier,
+  value?: DeclExpression,
+): DeclVarDefinition => ({
   tag: VAR_DEFINITION,
   name,
   value,
@@ -223,7 +240,10 @@ export const defArr = (
   value,
 })
 
-export type DeclDestruct = DeclVarDefinition | DeclObjectDestruct | DeclArrayDestruct
+export type DeclDestruct =
+  | DeclVarDefinition
+  | DeclObjectDestruct
+  | DeclArrayDestruct
 
 export type DeclDeclarator = {
   readonly pattern: DeclDestruct
@@ -290,7 +310,9 @@ export type DeclTypeDefinition = {
   readonly tag: typeof TYPE_DEFINITION
   readonly def: readonly DeclTypeDeclarator[]
 }
-export const typeDefinition = (def: readonly DeclTypeDeclarator[]): DeclTypeDefinition => ({
+export const typeDefinition = (
+  def: readonly DeclTypeDeclarator[],
+): DeclTypeDefinition => ({
   tag: TYPE_DEFINITION,
   def,
 })
@@ -309,7 +331,10 @@ export type DeclTypeAnnotation = {
   readonly body: DeclExpression
   readonly type: DeclType
 }
-export const cast = (body: DeclExpression, type: DeclType): DeclTypeAnnotation => ({
+export const cast = (
+  body: DeclExpression,
+  type: DeclType,
+): DeclTypeAnnotation => ({
   tag: AS,
   body,
   type,
@@ -337,7 +362,10 @@ export const importDestruct = (
   specifiers,
   default: defaultName ? { sourceName: id(defaultName) } : undefined,
 })
-export const importDefault = (source: string, defaultSpec: DeclImportSpecifier): DeclImport => ({
+export const importDefault = (
+  source: string,
+  defaultSpec: DeclImportSpecifier,
+): DeclImport => ({
   tag: IMPORT,
   source,
   specifiers: [],
@@ -348,7 +376,9 @@ export type DeclExport = {
   readonly tag: typeof EXPORT
   readonly def: DeclDefinition | DeclTypeDefinition
 }
-export const exportDef = (def: DeclDefinition | DeclTypeDefinition): DeclExport => ({
+export const exportDef = (
+  def: DeclDefinition | DeclTypeDefinition,
+): DeclExport => ({
   tag: EXPORT,
   def,
 })

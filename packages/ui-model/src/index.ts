@@ -1,1 +1,1 @@
-export * from './lib/template.ts';
+export * from "./lib/template.ts"

@@ -1,44 +1,35 @@
-import { DeclPrimitiveValue, DeclValue } from "@declaratypel/ast"
+import { DeclPrimitiveValue } from "@declaratypel/ast"
 import { DeclExpression } from "@declaratypel/ast"
-import { DeclType, DeclPropDefinition } from "@declaratypel/ast"
+import type { DeclComponent } from "./component.ts"
 
-export const ELEMENT = "element"
-export const COMPONENT = "component"
+export const NATIVE_ELEMENT = "nativeElement"
+export const COMPONENT_ELEMENT = "componentElement"
 
-export type DeclUITag = typeof ELEMENT | typeof COMPONENT
+export type DeclUITag = typeof NATIVE_ELEMENT | typeof COMPONENT_ELEMENT
 
 export type DeclUITemplateNativeElement = {
-  uiTag: typeof ELEMENT
+  uiTag: typeof NATIVE_ELEMENT
   name: string
   attrs: Record<string, DeclPrimitiveValue>
   children: DeclUITemplate
 }
 
-export type DeclUIComponentPropExpression = DeclExpression | DeclUITemplateComponentElement
+export type DeclUIComponentPropExpression =
+  | DeclExpression
+  | DeclUITemplateComponentElement
 
 export type DeclUITemplateComponentElement = {
-  uiTag: typeof COMPONENT
+  uiTag: typeof COMPONENT_ELEMENT
   component: DeclComponent
   props: Record<string, DeclUIComponentPropExpression>
   children: DeclUITemplate
 }
 
-export type DeclUITemplateElement = DeclUITemplateNativeElement | DeclUITemplateComponentElement
+export type DeclUITemplateElement =
+  | DeclUITemplateNativeElement
+  | DeclUITemplateComponentElement
 
-export type DeclUITemplate = DeclUITemplateElement | DeclUITemplateElement[] | DeclPrimitiveValue
-
-export type DeclComponent = {
-  tag: "ui"
-  name: string
-  description?: string
-  props: DeclPropDefinition[]
-  return: DeclType
-  body: DeclValue
-}
-
-export type DeclUIRule = {
-  tag: "uirule"
-  selector: string
-  type: DeclType
-  editor: DeclUITemplateElement
-}
+export type DeclUITemplate =
+  | DeclUITemplateElement
+  | DeclPrimitiveValue
+  | DeclUITemplate[]

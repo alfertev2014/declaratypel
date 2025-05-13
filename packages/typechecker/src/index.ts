@@ -1,1 +1,1 @@
-export * from './lib/checker.ts';
+export * from "./lib/checker.ts"

@@ -1,1 +1,1 @@
-export * from './lib/parser-typescript.js';
+export * from "./lib/parser-typescript.js"

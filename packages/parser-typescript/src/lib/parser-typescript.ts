@@ -1,3 +1,3 @@
 export function parserTypescript(): string {
-  return 'parser-typescript';
+  return "parser-typescript"
 }

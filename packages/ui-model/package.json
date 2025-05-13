@@ -19,6 +19,7 @@
     "name": "ui-model"
   },
   "dependencies": {
-    "tslib": "^2.3.0"
+    "tslib": "^2.3.0",
+    "@declaratypel/ast": "0.0.1"
   }
 }

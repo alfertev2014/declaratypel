@@ -1,3 +1,3 @@
 export function uiCompiler(): string {
-  return 'ui-compiler';
+  return "ui-compiler"
 }

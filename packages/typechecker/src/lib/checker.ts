@@ -76,7 +76,10 @@ type RefinementScopeFrame = {
 
 type ScopeFrame = VarScopeFrame | TypeScopeFrame | RefinementScopeFrame | null
 
-const lookupVar = (scope: ScopeFrame, identifier: DeclIdentifier): VarScopeFrame => {
+const lookupVar = (
+  scope: ScopeFrame,
+  identifier: DeclIdentifier,
+): VarScopeFrame => {
   while (scope) {
     if ("var" in scope && scope.var.name === identifier.name) {
       return scope
@@ -96,7 +99,10 @@ const withVar = (
   bounds,
 })
 
-const lookupType = (scope: ScopeFrame, identifier: DeclTypeIdentifier): TypeScopeFrame => {
+const lookupType = (
+  scope: ScopeFrame,
+  identifier: DeclTypeIdentifier,
+): TypeScopeFrame => {
   while (scope) {
     if ("type" in scope && scope.type.name === identifier.name) {
       return scope
@@ -118,7 +124,9 @@ const withTypeVar = (
 
 const typeMismatch = (expected: DeclType, inferred: DeclType): never => {
   // TODO: type to string
-  throw new Error(`Type '${inferred.tctor}' is not assignable to type '${expected.tctor}'`)
+  throw new Error(
+    `Type '${inferred.tctor}' is not assignable to type '${expected.tctor}'`,
+  )
 }
 
 const propMissed = (
@@ -158,12 +166,20 @@ const unreachable = (): never => {
   throw new Error("BUG: Unreachable code")
 }
 
-const unifyTypes = (expected: DeclType, inferred: DeclType, scope: ScopeFrame): void => {
+const unifyTypes = (
+  expected: DeclType,
+  inferred: DeclType,
+  scope: ScopeFrame,
+): void => {
   if (expected.tctor === TYPE_IDENTIFIER) {
     const expectedFrame = lookupType(scope, expected)
     if (inferred.tctor === TYPE_IDENTIFIER) {
       const inferredFrame = lookupType(scope, inferred)
-      unifyTypes(expectedFrame.bounds.upperBound, inferredFrame.bounds.upperBound, scope)
+      unifyTypes(
+        expectedFrame.bounds.upperBound,
+        inferredFrame.bounds.upperBound,
+        scope,
+      )
       expectedFrame.bounds = inferredFrame.bounds
     } else {
       unifyTypes(expectedFrame.bounds.upperBound, inferred, scope)
@@ -197,7 +213,8 @@ const unifyTypes = (expected: DeclType, inferred: DeclType, scope: ScopeFrame): 
         case STRING: {
           if (
             (inferred.tctor === BUILTIN && inferred.tag === expected.tag) ||
-            (inferred.tctor === LITERAL_TYPE && typeof inferred.value === expected.tag)
+            (inferred.tctor === LITERAL_TYPE &&
+              typeof inferred.value === expected.tag)
           ) {
             return
           } else {
@@ -209,7 +226,10 @@ const unifyTypes = (expected: DeclType, inferred: DeclType, scope: ScopeFrame): 
       }
     }
     case LITERAL_TYPE: {
-      if (inferred.tctor === LITERAL_TYPE && inferred.value === expected.value) {
+      if (
+        inferred.tctor === LITERAL_TYPE &&
+        inferred.value === expected.value
+      ) {
         return
       } else {
         return typeMismatch(expected, inferred)
@@ -241,11 +261,19 @@ const unifyTypes = (expected: DeclType, inferred: DeclType, scope: ScopeFrame): 
         let i = 0
         for (; i < expected.args.length; ++i) {
           // contravariance!!!
-          unifyTypes(inferred.args[i]?.type ?? builtinType(UNKNOWN), expected.args[i].type, scope)
+          unifyTypes(
+            inferred.args[i]?.type ?? builtinType(UNKNOWN),
+            expected.args[i].type,
+            scope,
+          )
         }
         if (expected.rest) {
           // contravariance!!!
-          unifyTypes(inferred.rest?.type ?? builtinType(UNKNOWN), expected.rest.type, scope)
+          unifyTypes(
+            inferred.rest?.type ?? builtinType(UNKNOWN),
+            expected.rest.type,
+            scope,
+          )
         }
 
         unifyTypes(expected.result, inferred.result, scope)
@@ -258,10 +286,15 @@ const unifyTypes = (expected: DeclType, inferred: DeclType, scope: ScopeFrame): 
 
 export const indexTypeMismatch = (index: DeclExpression): never => {
   // TODO: Expression to string
-  throw new Error(`Type of index expression '${index.tag}' must be assignable to 'string | number'.`)
+  throw new Error(
+    `Type of index expression '${index.tag}' must be assignable to 'string | number'.`,
+  )
 }
 
-export const inferType = (expr: DeclExpression, scope: ScopeFrame): DeclType => {
+export const inferType = (
+  expr: DeclExpression,
+  scope: ScopeFrame,
+): DeclType => {
   switch (expr.tag) {
     case IDENTIFIER: {
       return lookupVar(scope, expr).bounds.upperBound
@@ -287,7 +320,10 @@ export const inferType = (expr: DeclExpression, scope: ScopeFrame): DeclType => 
             const indexType = inferType(prop.index, scope)
             const type = inferType(prop.value, scope)
             if (indexType.tctor === LITERAL_TYPE) {
-              if (typeof indexType.value === "string" || typeof indexType.value === "number") {
+              if (
+                typeof indexType.value === "string" ||
+                typeof indexType.value === "number"
+              ) {
                 props.push({
                   name: indexType.value,
                   type,
@@ -308,7 +344,9 @@ export const inferType = (expr: DeclExpression, scope: ScopeFrame): DeclType => 
                 readonly: false,
               }
             } else {
-              throw new Error("TODO: Check indexType is subtype of string | number.")
+              throw new Error(
+                "TODO: Check indexType is subtype of string | number.",
+              )
             }
             break
           }
@@ -324,10 +362,17 @@ export const inferType = (expr: DeclExpression, scope: ScopeFrame): DeclType => 
     case LAMBDA: {
       let bodyScope = scope
       const argTypes: /*mutable*/ DeclArgDefinition[] = []
-      const checkArg = (arg: DeclDestruct, expected: DeclType): DeclArgDestruct => {
+      const checkArg = (
+        arg: DeclDestruct,
+        expected: DeclType,
+      ): DeclArgDestruct => {
         switch (arg.tag) {
           case VAR_DEFINITION: {
-            bodyScope = withVar(bodyScope, arg.name, typeBounds(bodyScope, expected))
+            bodyScope = withVar(
+              bodyScope,
+              arg.name,
+              typeBounds(bodyScope, expected),
+            )
             return argVar(arg.name)
           }
           case ARRAY_DESTRUCT: {
@@ -336,13 +381,17 @@ export const inferType = (expr: DeclExpression, scope: ScopeFrame): DeclType => 
               for (const item of arg.items) {
                 subargs.push(checkArg(item, expected.items))
               }
-              const rest = arg.rest ? checkArg(arg.rest, expected.items) : undefined
+              const rest = arg.rest
+                ? checkArg(arg.rest, expected.items)
+                : undefined
               return argArr(subargs, rest)
             } else if (expected.tctor === TUPLE) {
               let i = 0
               const subargs: DeclArgDestruct[] = []
               for (const item of arg.items) {
-                subargs.push(checkArg(item, expected.items[i] ?? literalType(undefined)))
+                subargs.push(
+                  checkArg(item, expected.items[i] ?? literalType(undefined)),
+                )
                 ++i
               }
               // TODO: nested and multiple rest of tuples
@@ -357,7 +406,9 @@ export const inferType = (expr: DeclExpression, scope: ScopeFrame): DeclType => 
             }
             const subprops: DeclArgPropDestruct[] = []
             for (const prop of arg.props) {
-              const expectedProp = expected.props.find((p) => p.name === prop.name.name)
+              const expectedProp = expected.props.find(
+                (p) => p.name === prop.name.name,
+              )
               if (prop.tag === VAR_DEFINITION) {
                 if (expectedProp) {
                   checkArg(prop, expectedProp.type)
@@ -401,11 +452,14 @@ export const inferType = (expr: DeclExpression, scope: ScopeFrame): DeclType => 
       for (const arg of expr.args) {
         const type =
           arg.type ??
-          (arg.pattern.value ? inferType(arg.pattern.value, bodyScope) : builtinType(UNKNOWN))
+          (arg.pattern.value
+            ? inferType(arg.pattern.value, bodyScope)
+            : builtinType(UNKNOWN))
         argTypes.push({
           pattern: checkArg(arg.pattern, type),
           optional:
-            !!arg.pattern.value || (arg.pattern.tag === VAR_DEFINITION && !!arg.pattern.optional),
+            !!arg.pattern.value ||
+            (arg.pattern.tag === VAR_DEFINITION && !!arg.pattern.optional),
           type,
           description: arg.description,
         })
@@ -415,7 +469,9 @@ export const inferType = (expr: DeclExpression, scope: ScopeFrame): DeclType => 
       if (expr.rest) {
         const type =
           expr.restType ??
-          (expr.restValue ? inferType(expr.restValue, bodyScope) : builtinType(UNKNOWN))
+          (expr.restValue
+            ? inferType(expr.restValue, bodyScope)
+            : builtinType(UNKNOWN))
         restType = {
           pattern: checkArg(expr.rest, type),
           type,
@@ -423,7 +479,11 @@ export const inferType = (expr: DeclExpression, scope: ScopeFrame): DeclType => 
         }
       }
 
-      return funcType(expr.resultType ?? inferType(expr.body, bodyScope), argTypes, restType)
+      return funcType(
+        expr.resultType ?? inferType(expr.body, bodyScope),
+        argTypes,
+        restType,
+      )
     }
     default:
       return unreachable()

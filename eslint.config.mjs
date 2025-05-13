@@ -1,24 +1,42 @@
-import nx from '@nx/eslint-plugin';
+import nx from "@nx/eslint-plugin"
+import tseslint from "typescript-eslint"
 
-export default [
-  ...nx.configs['flat/base'],
-  ...nx.configs['flat/typescript'],
-  ...nx.configs['flat/javascript'],
+export default tseslint.config([
+  ...nx.configs["flat/base"],
+  ...nx.configs["flat/javascript"],
+  ...nx.configs["flat/typescript"],
   {
-    ignores: ['**/dist'],
+    ignores: ["**/dist"],
   },
   {
-    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+    extends: [...tseslint.configs.strictTypeChecked],
+    files: ["**/*.ts", "**/*.tsx"],
+    languageOptions: {
+      parserOptions: {
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
     rules: {
-      '@nx/enforce-module-boundaries': [
-        'error',
+      "@typescript-eslint/no-unused-vars": "warn",
+      "@typescript-eslint/restrict-template-expressions": "off",
+      "@typescript-eslint/no-unnecessary-condition": "warn",
+      "@typescript-eslint/no-floating-promises": "off",
+    },
+  },
+  {
+    files: ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx"],
+    rules: {
+      "@nx/enforce-module-boundaries": [
+        "error",
         {
           enforceBuildableLibDependency: true,
-          allow: ['^.*/eslint(\\.base)?\\.config\\.[cm]?js$'],
+          allow: ["^.*/eslint(\\.base)?\\.config\\.[cm]?js$"],
+          banTransitiveDependencies: true,
           depConstraints: [
             {
-              sourceTag: '*',
-              onlyDependOnLibsWithTags: ['*'],
+              sourceTag: "*",
+              onlyDependOnLibsWithTags: ["*"],
             },
           ],
         },
@@ -27,16 +45,16 @@ export default [
   },
   {
     files: [
-      '**/*.ts',
-      '**/*.tsx',
-      '**/*.cts',
-      '**/*.mts',
-      '**/*.js',
-      '**/*.jsx',
-      '**/*.cjs',
-      '**/*.mjs',
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.cts",
+      "**/*.mts",
+      "**/*.js",
+      "**/*.jsx",
+      "**/*.cjs",
+      "**/*.mjs",
     ],
     // Override or add rules here
     rules: {},
   },
-];
+])

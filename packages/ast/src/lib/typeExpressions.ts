@@ -1,6 +1,11 @@
 import type { DeclPrimitiveValue } from "./literalValues.ts"
-import type { PROP_DEFINITION} from "./sourceExpressions.ts";
-import { ARRAY_DESTRUCT, type DeclIdentifier, OBJECT_DESTRUCT, VAR_DEFINITION } from "./sourceExpressions.ts"
+import type { PROP_DEFINITION } from "./sourceExpressions.ts"
+import {
+  ARRAY_DESTRUCT,
+  type DeclIdentifier,
+  OBJECT_DESTRUCT,
+  VAR_DEFINITION,
+} from "./sourceExpressions.ts"
 
 export const STRING = "string"
 export const NUMBER = "number"
@@ -82,10 +87,13 @@ export type DeclObjectType = {
   readonly props: readonly DeclPropDefinition[]
   readonly indexer?: DeclIndexerDefinition
 }
-export const objectType = (props: readonly DeclPropDefinition[], indexer?: DeclIndexerDefinition): DeclObjectType => ({
+export const objectType = (
+  props: readonly DeclPropDefinition[],
+  indexer?: DeclIndexerDefinition,
+): DeclObjectType => ({
   tctor: OBJECT,
   props,
-  indexer
+  indexer,
 })
 
 export type DeclArrayType = {
@@ -102,7 +110,10 @@ export type DeclTupleType = {
   readonly items: readonly DeclType[]
   readonly rest?: DeclType
 }
-export const tupleType = (items: readonly DeclType[], rest?: DeclType): DeclTupleType => ({
+export const tupleType = (
+  items: readonly DeclType[],
+  rest?: DeclType,
+): DeclTupleType => ({
   tctor: TUPLE,
   items,
   rest,
@@ -117,11 +128,13 @@ export const argVar = (name: DeclIdentifier): DeclArgVarDefinition => ({
   name,
 })
 
-export type DeclArgPropDestruct = DeclArgVarDefinition | {
-  tag: typeof PROP_DEFINITION
-  name: DeclIdentifier
-  pattern: DeclArgDestruct
-}
+export type DeclArgPropDestruct =
+  | DeclArgVarDefinition
+  | {
+      tag: typeof PROP_DEFINITION
+      name: DeclIdentifier
+      pattern: DeclArgDestruct
+    }
 
 export type DeclArgObjectDestruct = {
   readonly tag: typeof OBJECT_DESTRUCT
@@ -151,7 +164,10 @@ export const argArr = (
   rest,
 })
 
-export type DeclArgDestruct = DeclArgVarDefinition | DeclArgObjectDestruct | DeclArgArrayDestruct
+export type DeclArgDestruct =
+  | DeclArgVarDefinition
+  | DeclArgObjectDestruct
+  | DeclArgArrayDestruct
 
 export type DeclArgDefinition = {
   readonly pattern: DeclArgDestruct
@@ -169,7 +185,7 @@ export type DeclFunctionalType = {
 export const funcType = (
   result: DeclType,
   args: readonly DeclArgDefinition[],
-  rest?: DeclArgDefinition  ,
+  rest?: DeclArgDefinition,
 ): DeclFunctionalType => ({
   tctor: FUNCTIONAL,
   result,
@@ -190,7 +206,9 @@ export type DeclIntersectionType = {
   readonly tctor: typeof INTERSECTION
   readonly args: readonly DeclType[]
 }
-export const intersectionType = (args: readonly DeclType[]): DeclIntersectionType => ({
+export const intersectionType = (
+  args: readonly DeclType[],
+): DeclIntersectionType => ({
   tctor: INTERSECTION,
   args,
 })
@@ -206,7 +224,10 @@ export type DeclGenericType = {
   readonly targs: readonly DeclTypeVarDefinition[]
   readonly body: DeclType
 }
-export const genericType = (targs: readonly DeclTypeVarDefinition[], body: DeclType): DeclGenericType => ({
+export const genericType = (
+  targs: readonly DeclTypeVarDefinition[],
+  body: DeclType,
+): DeclGenericType => ({
   tctor: GENERIC,
   targs,
   body,
@@ -217,7 +238,10 @@ export type DeclGenericCallType = {
   readonly name: string
   readonly args: readonly DeclType[]
 }
-export const genericCallType = (name: string, args: readonly DeclType[]): DeclGenericCallType => ({
+export const genericCallType = (
+  name: string,
+  args: readonly DeclType[],
+): DeclGenericCallType => ({
   tctor: GENERIC_CALL,
   name,
   args,
