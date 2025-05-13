@@ -1,0 +1,28 @@
+{
+  "name": "@declaratypel/typechecker",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "test": "node --test"
+  },
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "development": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "nx": {
+    "name": "typechecker"
+  },
+  "dependencies": {
+    "tslib": "^2.3.0",
+    "@declaratypel/ast": "0.0.1"
+  }
+}

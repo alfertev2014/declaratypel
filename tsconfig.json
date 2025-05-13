@@ -1,4 +1,22 @@
 {
+  "extends": "./tsconfig.base.json",
+  "compileOnSave": false,
   "files": [],
-  "references": [{ "path": "./tsconfig.app.json" }, { "path": "./tsconfig.node.json" }]
+  "references": [
+    {
+      "path": "./packages/ast"
+    },
+    {
+      "path": "./packages/typechecker"
+    },
+    {
+      "path": "./packages/ui-model"
+    },
+    {
+      "path": "./packages/parser-typescript"
+    },
+    {
+      "path": "./packages/ui-compiler"
+    }
+  ]
 }
