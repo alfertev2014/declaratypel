@@ -181,16 +181,19 @@ export type DeclFunctionalType = {
   readonly result: DeclType
   readonly args: readonly DeclArgDefinition[]
   readonly rest?: DeclArgDefinition
+  readonly description?: string
 }
 export const funcType = (
   result: DeclType,
   args: readonly DeclArgDefinition[],
   rest?: DeclArgDefinition,
+  description?: string,
 ): DeclFunctionalType => ({
   tctor: FUNCTIONAL,
   result,
   args,
   rest,
+  description
 })
 
 export type DeclUnionType = {
