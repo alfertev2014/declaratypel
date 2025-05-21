@@ -22,6 +22,7 @@ export const IDENTIFIER = "identifier"
 export const AS = "as"
 export const IMPORT = "import"
 export const EXPORT = "export"
+export const MODULE = "module"
 
 export type DeclUnaryOperator = "+" | "-" | "!" | "~" | "typeof"
 
@@ -300,21 +301,19 @@ export const definition = (
   mutable,
 })
 
-export type DeclTypeDeclarator = {
-  readonly name: string
-  readonly description?: string
-  readonly value: DeclType
-}
-
 export type DeclTypeDefinition = {
   readonly tag: typeof TYPE_DEFINITION
-  readonly def: readonly DeclTypeDeclarator[]
+  readonly name: string
+  readonly type: DeclType
+  readonly description?: string
 }
 export const typeDefinition = (
-  def: readonly DeclTypeDeclarator[],
+  name: string,
+  type: DeclType,
+  description?: string,
 ): DeclTypeDefinition => ({
   tag: TYPE_DEFINITION,
-  def,
+  name, type, description
 })
 
 export type DeclIdentifier = {
@@ -396,3 +395,14 @@ export type DeclExpression =
   | DeclTypeAnnotation
 
 export type DeclTopLevel = DeclExpression | DeclImport | DeclExport
+
+export type DeclModule = {
+  readonly tag: typeof MODULE
+  readonly topLevel: DeclTopLevel[]
+  readonly description?: string
+}
+export const moduleTopLevel = (topLevel: DeclTopLevel[], description?: string) => ({
+  tag: MODULE,
+  topLevel,
+  description,
+})
