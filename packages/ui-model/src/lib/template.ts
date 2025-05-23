@@ -1,13 +1,13 @@
-import {
+import type {
   DeclArgDefinition,
   DeclEllipsisExpression,
   DeclPropDefinition,
   DeclType,
-  type DeclIdentifier,
-  type DeclImport,
-  type DeclLambdaExpression,
+  DeclIdentifier,
+  DeclImport,
+  DeclLambdaExpression,
+  DeclExpression
 } from "@declaratypel/ast"
-import { DeclExpression } from "@declaratypel/ast"
 
 export const COMPONENT = "component"
 export const NATIVE_ELEMENT = "nativeElement"
