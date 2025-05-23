@@ -1,12 +1,66 @@
-import { DEFINITION, EXPORT, IMPORT, TYPE_DEFINITION, type DeclDefinition, type DeclImport, type DeclModule, type DeclTypeDefinition } from "@declaratypel/ast";
-import { uiExport, uiModule, type DeclUIDefinition, type DeclUIExport, type DeclUIModule } from "./template.ts";
+import { DEFINITION, EXPORT, IMPORT, LAMBDA, TYPE_DEFINITION, VAR_DEFINITION, type DeclDefinition, type DeclImport, type DeclModule, type DeclTypeDefinition } from "@declaratypel/ast";
+import { COMPUTED_VALUE, PURE_FUNCTION, STATE, uiExport, uiModule, uiTypedef, uiValue, type DeclUIDefinition, type DeclUIExport, type DeclUIModule } from "./template.ts";
 
-const transformDefinition = (def: DeclDefinition): DeclUIDefinition => {
-  throw new Error("Not implemented")
+const transformDefinition = (def: DeclDefinition): readonly DeclUIDefinition[] => {
+  if (def.mutable) {
+    const uiDefs: DeclUIDefinition[] = []
+    for (const declarator of def.def) {
+      if (declarator.pattern.tag === VAR_DEFINITION) {
+        const {name, value } = declarator.pattern
+        if (!value) {
+          throw new Error("Initializer is required in state definition")
+        }
+        if (value.tag === LAMBDA) {
+          // TODO: Check state type recursively
+          throw new Error("Lambda expressions are not supported as state initializers")
+        }
+
+        // TODO: Get inferred type if not specified
+        uiDefs.push({
+          name: name.name,
+          value: uiValue(STATE, value, declarator.type)
+        })
+      } else {
+        throw new Error("Definition of state with destruction is not supported yet")
+      }
+    }
+    return uiDefs
+  } else {
+    const uiDefs: DeclUIDefinition[] = []
+    for (const declarator of def.def) {
+      if (declarator.pattern.tag === VAR_DEFINITION) {
+        const {name, value } = declarator.pattern
+        if (!value) {
+          throw new Error("Const initializer is required")
+        }
+        
+        // TODO: Get inferred type if not specified
+        if (value.tag === LAMBDA) {
+          // TODO: Check result type for action
+          uiDefs.push({
+            name: name.name,
+            value: uiValue(PURE_FUNCTION, value, declarator.type)
+          })  
+        } else {
+          uiDefs.push({
+            name: name.name,
+            value: uiValue(COMPUTED_VALUE, value, declarator.type)
+          })
+        }
+      } else {
+        throw new Error("Definition of computed with destruction is not supported yet")
+      }
+    }
+    return uiDefs
+  }
 }
 
 const transformTypeDefinition = (def: DeclTypeDefinition): DeclUIDefinition => {
-  throw new Error("Not implemented")
+  // TODO: Check type for reactive state type recursively
+  return {
+    name: def.name,
+    value: uiTypedef(def.type, def.description)
+  }
 }
 
 export const astToUi = (module: DeclModule): DeclUIModule => {
@@ -22,7 +76,10 @@ export const astToUi = (module: DeclModule): DeclUIModule => {
       case EXPORT: {
         switch (top.def.tag) {
           case DEFINITION: {
-            definitions.push(uiExport(transformDefinition(top.def)))
+            const uiDefs = transformDefinition(top.def)
+            for (const uiDef of uiDefs) {
+              definitions.push(uiExport(uiDef))
+            }
             break;
           }
           case TYPE_DEFINITION: {
