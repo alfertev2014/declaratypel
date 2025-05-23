@@ -2,11 +2,11 @@ import { DEFINITION, EXPORT, IMPORT, TYPE_DEFINITION, type DeclDefinition, type 
 import { uiExport, uiModule, type DeclUIDefinition, type DeclUIExport, type DeclUIModule } from "./template.ts";
 
 const transformDefinition = (def: DeclDefinition): DeclUIDefinition => {
-
+  throw new Error("Not implemented")
 }
 
 const transformTypeDefinition = (def: DeclTypeDefinition): DeclUIDefinition => {
-
+  throw new Error("Not implemented")
 }
 
 export const astToUi = (module: DeclModule): DeclUIModule => {
