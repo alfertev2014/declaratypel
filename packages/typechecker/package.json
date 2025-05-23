@@ -22,7 +22,7 @@
     "name": "typechecker"
   },
   "dependencies": {
-    "tslib": "^2.3.0",
-    "@declaratypel/ast": "0.0.1"
+    "@declaratypel/ast": "0.0.1",
+    "tslib": "^2.8.1"
   }
 }

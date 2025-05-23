@@ -12,6 +12,9 @@
   "references": [
     {
       "path": "../ast/tsconfig.lib.json"
+    },
+    {
+      "path": "../eslint-config-pureflang/tsconfig.lib.json"
     }
   ]
 }

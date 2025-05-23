@@ -1,13 +1,7 @@
-import { defineConfig } from "eslint/config"
 import baseConfig from "../../eslint.config.mjs"
-import pureflang from "@declaratypel/eslint-config-pureflang"
 
-export default defineConfig([
+export default [
   ...baseConfig,
-  {
-    files: ["**/*.ts"],
-    extends: [pureflang]
-  },
   {
     files: ["**/*.json"],
     rules: {
@@ -22,4 +16,4 @@ export default defineConfig([
       parser: await import("jsonc-eslint-parser"),
     },
   },
-])
+]
