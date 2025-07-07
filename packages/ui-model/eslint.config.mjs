@@ -1,6 +1,6 @@
 import { defineConfig } from "eslint/config"
 import baseConfig from "../../eslint.config.mjs"
-import pureflang from "../eslint-config-pureflang/src/index.ts"
+import pureflang from "@declaratypel/eslint-config-pureflang"
 
 export default defineConfig([
   ...baseConfig,
