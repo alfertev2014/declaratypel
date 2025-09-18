@@ -90,7 +90,15 @@ export const astToUi = (module: DeclModule): DeclUIModule => {
         break
       }
       case DEFINITION: {
+        const uiDefs = transformDefinition(top)
+        for (const uiDef of uiDefs) {
+          definitions.push(uiDef)
+        }
         break
+      }
+      case TYPE_DEFINITION: {
+        definitions.push(transformTypeDefinition(top))
+        break;
       }
       default:
         throw new Error(`Unsupported top level syntax ${top.tag}`)

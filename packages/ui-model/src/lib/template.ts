@@ -3,7 +3,6 @@ import type {
   DeclEllipsisExpression,
   DeclPropDefinition,
   DeclType,
-  DeclIdentifier,
   DeclImport,
   DeclLambdaExpression,
   DeclExpression,
@@ -23,8 +22,8 @@ export const STATE = "state"
 export const PURE_FUNCTION = "pureFunction"
 export const COMPUTED_VALUE = "computedValue"
 export const ACTION = "action"
-export const COMPONENT_DEF = "componentDefinition"
 export const UI_EXPORT = "uiExport"
+export const UI_DEFINITION = "uiDefinition"
 export const UI_MODULE = "uiModule"
 
 export type NativeEffect = {
@@ -130,6 +129,7 @@ export const uiValue = (
 })
 
 export type DeclUIDefinition = {
+  uiTag: typeof UI_DEFINITION
   readonly name: string
   readonly value:
     | DeclUIValue
@@ -140,6 +140,7 @@ export const uiDef = (
   name: string,
   value: DeclUIValue | DeclUITypeDefinition | DeclUIComponent,
 ): DeclUIDefinition => ({
+  uiTag: UI_DEFINITION,
   name,
   value,
 })

@@ -391,17 +391,16 @@ export type DeclExpression =
   | DeclArray
   | DeclObject
   | DeclLambdaExpression
-  | DeclDefinition
   | DeclTypeAnnotation
 
-export type DeclTopLevel = DeclExpression | DeclImport | DeclExport
+export type DeclTopLevel = DeclExpression | DeclDefinition | DeclTypeDefinition | DeclImport | DeclExport
 
 export type DeclModule = {
   readonly tag: typeof MODULE
   readonly topLevel: DeclTopLevel[]
   readonly description?: string
 }
-export const moduleTopLevel = (topLevel: DeclTopLevel[], description?: string) => ({
+export const moduleTopLevel = (topLevel: DeclTopLevel[], description?: string): DeclModule => ({
   tag: MODULE,
   topLevel,
   description,

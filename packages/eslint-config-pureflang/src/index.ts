@@ -8,6 +8,7 @@ export default defineConfig([
         "FunctionExpression",
         "WithStatement",
         "BinaryExpression[operator='in']",
+        "UnaryExpression[operator='delete']",
         "AssignmentExpression",
         "TSAsExpression",
         "ObjectExpression SpreadElement",
