@@ -24,6 +24,7 @@ export const IMPORT = "import"
 export const EXPORT = "export"
 export const MODULE = "module"
 
+
 export type DeclUnaryOperator = "+" | "-" | "!" | "~" | "typeof"
 
 export type DeclUnaryExpression = {
@@ -186,12 +187,12 @@ export const obj = (items: readonly DeclObjectItem[]): DeclObject => ({
 
 export type DeclVarDefinition = {
   readonly tag: typeof VAR_DEFINITION
-  readonly name: DeclIdentifier
+  readonly name: string
   readonly value?: DeclExpression
   readonly optional?: boolean
 }
 export const defVar = (
-  name: DeclIdentifier,
+  name: string,
   value?: DeclExpression,
 ): DeclVarDefinition => ({
   tag: VAR_DEFINITION,
@@ -203,7 +204,7 @@ export type DeclPropDestruct =
   | DeclVarDefinition
   | {
       tag: typeof PROP_DEFINITION
-      readonly name: DeclIdentifier
+      readonly name: string
       readonly pattern: DeclDestruct
     }
 
@@ -340,8 +341,8 @@ export const cast = (
 })
 
 export type DeclImportSpecifier = {
-  sourceName: DeclIdentifier
-  alias?: DeclIdentifier
+  sourceName: string
+  alias?: string
   isType?: boolean
 }
 
@@ -359,7 +360,7 @@ export const importDestruct = (
   tag: IMPORT,
   source,
   specifiers,
-  default: defaultName ? { sourceName: id(defaultName) } : undefined,
+  default: defaultName ? { sourceName: defaultName } : undefined,
 })
 export const importDefault = (
   source: string,
@@ -388,6 +389,7 @@ export type DeclExpression =
   | DeclUnaryExpression
   | DeclBinaryExpression
   | DeclTernaryExpression
+  | DeclCallExpression
   | DeclArray
   | DeclObject
   | DeclLambdaExpression

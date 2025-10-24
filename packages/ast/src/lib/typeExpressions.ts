@@ -121,9 +121,9 @@ export const tupleType = (
 
 export type DeclArgVarDefinition = {
   readonly tag: typeof VAR_DEFINITION
-  readonly name: DeclIdentifier
+  readonly name: string
 }
-export const argVar = (name: DeclIdentifier): DeclArgVarDefinition => ({
+export const argVar = (name: string): DeclArgVarDefinition => ({
   tag: VAR_DEFINITION,
   name,
 })
@@ -132,7 +132,7 @@ export type DeclArgPropDestruct =
   | DeclArgVarDefinition
   | {
       tag: typeof PROP_DEFINITION
-      name: DeclIdentifier
+      name: string
       pattern: DeclArgDestruct
     }
 

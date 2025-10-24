@@ -173,17 +173,18 @@ export type DeclActionDefinition = {
   readonly description?: string
 }
 
+export type DeclSlotDefinition = {
+  readonly name: string
+  readonly component: DeclUIComponentArgs
+  readonly description?: string
+}
+
 export type DeclUIComponentArgs = {
   readonly props: readonly DeclPropDefinition[]
   readonly actions: readonly DeclActionDefinition[]
   readonly slots: readonly DeclSlotDefinition[]
 }
 
-export type DeclSlotDefinition = {
-  readonly name: string
-  readonly component: DeclUIComponentArgs
-  readonly description?: string
-}
 
 export type DeclUIComponent = {
   readonly uiTag: typeof COMPONENT

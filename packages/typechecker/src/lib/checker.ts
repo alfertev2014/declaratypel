@@ -2,7 +2,6 @@ import {
   ARRAY_DESTRUCT,
   type DeclDestruct,
   type DeclExpression,
-  type DeclIdentifier,
   ELLIPSIS,
   IDENTIFIER,
   INDEXER,
@@ -59,7 +58,7 @@ export const typeBounds = (
 type VarScopeFrame = {
   readonly parent: ScopeFrame
   /*mutable*/ bounds: TypeBounds
-  readonly var: DeclIdentifier
+  readonly var: string
 }
 
 type TypeScopeFrame = {
@@ -78,20 +77,20 @@ type ScopeFrame = VarScopeFrame | TypeScopeFrame | RefinementScopeFrame | null
 
 const lookupVar = (
   scope: ScopeFrame,
-  identifier: DeclIdentifier,
+  identifier: string,
 ): VarScopeFrame => {
   while (scope) {
-    if ("var" in scope && scope.var.name === identifier.name) {
+    if ("var" in scope && scope.var === identifier) {
       return scope
     }
     scope = scope.parent
   }
-  throw new Error(`Unknown variable identifier "${identifier.name}"`)
+  throw new Error(`Unknown variable identifier "${identifier}"`)
 }
 
 const withVar = (
   scope: ScopeFrame,
-  identifier: DeclIdentifier,
+  identifier: string,
   bounds: TypeBounds,
 ): ScopeFrame => ({
   parent: scope,
