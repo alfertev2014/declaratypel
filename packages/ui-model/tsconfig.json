@@ -7,9 +7,6 @@
       "path": "../ast"
     },
     {
-      "path": "../eslint-config-pureflang"
-    },
-    {
       "path": "./tsconfig.lib.json"
     }
   ]

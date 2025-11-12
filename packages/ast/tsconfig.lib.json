@@ -10,9 +10,4 @@
     "types": ["node"]
   },
   "include": ["src/**/*.ts"],
-  "references": [
-    {
-      "path": "../eslint-config-pureflang/tsconfig.lib.json"
-    }
-  ]
 }
