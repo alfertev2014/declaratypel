@@ -17,9 +17,6 @@
     },
     {
       "path": "./packages/ui-compiler"
-    },
-    {
-      "path": "./packages/eslint-config-pureflang"
     }
   ]
 }

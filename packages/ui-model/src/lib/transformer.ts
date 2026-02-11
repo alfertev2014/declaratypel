@@ -1,9 +1,9 @@
 import { DEFINITION, EXPORT, IMPORT, LAMBDA, TYPE_DEFINITION, VAR_DEFINITION, type DeclDefinition, type DeclImport, type DeclModule, type DeclTypeDefinition } from "@declaratypel/ast";
-import { COMPUTED_VALUE, PURE_FUNCTION, STATE, uiExport, uiModule, uiTypedef, uiValue, type DeclUIDefinition, type DeclUIExport, type DeclUIModule } from "./template.ts";
+import { COMPUTED_VALUE, PURE_FUNCTION, STATE, uiDef, uiExport, uiModule, uiTypedef, uiValue, type DeclUIDefinition, type DeclUIExport, type DeclUIModule } from "./template.ts";
 
 const transformDefinition = (def: DeclDefinition): readonly DeclUIDefinition[] => {
+  const uiDefs: DeclUIDefinition[] = []
   if (def.mutable) {
-    const uiDefs: DeclUIDefinition[] = []
     for (const declarator of def.def) {
       if (declarator.pattern.tag === VAR_DEFINITION) {
         const {name, value } = declarator.pattern
@@ -16,17 +16,12 @@ const transformDefinition = (def: DeclDefinition): readonly DeclUIDefinition[] =
         }
 
         // TODO: Get inferred type if not specified
-        uiDefs.push({
-          name: name.name,
-          value: uiValue(STATE, value, declarator.type)
-        })
+        uiDefs.push(uiDef(name, uiValue(STATE, value, declarator.type)))
       } else {
         throw new Error("Definition of state with destruction is not supported yet")
       }
     }
-    return uiDefs
   } else {
-    const uiDefs: DeclUIDefinition[] = []
     for (const declarator of def.def) {
       if (declarator.pattern.tag === VAR_DEFINITION) {
         const {name, value } = declarator.pattern
@@ -37,30 +32,21 @@ const transformDefinition = (def: DeclDefinition): readonly DeclUIDefinition[] =
         // TODO: Get inferred type if not specified
         if (value.tag === LAMBDA) {
           // TODO: Check result type for action
-          uiDefs.push({
-            name: name.name,
-            value: uiValue(PURE_FUNCTION, value, declarator.type)
-          })  
+          uiDefs.push(uiDef(name, uiValue(PURE_FUNCTION, value, declarator.type)))
         } else {
-          uiDefs.push({
-            name: name.name,
-            value: uiValue(COMPUTED_VALUE, value, declarator.type)
-          })
+          uiDefs.push(uiDef(name, uiValue(COMPUTED_VALUE, value, declarator.type)))
         }
       } else {
         throw new Error("Definition of computed with destruction is not supported yet")
       }
     }
-    return uiDefs
   }
+  return uiDefs
 }
 
 const transformTypeDefinition = (def: DeclTypeDefinition): DeclUIDefinition => {
   // TODO: Check type for reactive state type recursively
-  return {
-    name: def.name,
-    value: uiTypedef(def.type, def.description)
-  }
+  return uiDef(def.name, uiTypedef(def.type, def.description))
 }
 
 export const astToUi = (module: DeclModule): DeclUIModule => {

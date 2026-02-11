@@ -4,7 +4,6 @@ import { inferType } from "./checker.ts"
 import {
   decl,
   defVar,
-  id,
   lambda,
   literal,
   obj,
@@ -95,7 +94,7 @@ describe("inferType", () => {
 
     test("lambda of one parameter with annotation and returning literal", () => {
       const inferred = inferType(
-        lambda([decl(defVar(id("arg")), builtinType(NUMBER))], literal("foo")),
+        lambda([decl(defVar("arg"), builtinType(NUMBER))], literal("foo")),
         null,
       )
       assert.strictEqual(inferred.tctor, FUNCTIONAL)
@@ -105,7 +104,7 @@ describe("inferType", () => {
       assert.strictEqual(inferred.result.value, "foo")
       const { pattern, type } = inferred.args[0]
       assert.strictEqual(pattern.tag, VAR_DEFINITION)
-      assert.strictEqual(pattern.name.name, "arg")
+      assert.strictEqual(pattern.name, "arg")
       assert.strictEqual(type.tctor, BUILTIN)
       assert.strictEqual(type.tag, NUMBER)
     })
